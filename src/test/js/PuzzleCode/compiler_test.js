@@ -79,3 +79,41 @@ _(cases).forEach(function(tc){
 	tc.output = PuzzleCode.compiler.removeComment(tc.tokens)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.removeLabel"
+var cases = [
+	{
+		tokens: 				[],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel([], null)
+	},
+	{
+		tokens: 				["1"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1"], null)
+	},
+	{
+		tokens: 				["a:"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel([], "a")
+	},
+	{
+		tokens: 				["1", "2", "3"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], null)
+	},
+	{
+		tokens: 				["a:", "1", "2", "3"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], "a")
+	},
+	{
+		tokens: 				["a:1", "2", "3"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], "a")
+	},
+	{
+		tokens: 				[":", "2", "3"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel([":", "2", "3"], null)
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = PuzzleCode.compiler.removeLabel(tc.tokens)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})

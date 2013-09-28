@@ -113,5 +113,39 @@ PuzzleCode.compiler = (function(){
     }
   }
 
+  /**
+   * If tokens contains a label, then returns:
+   *  TokensLabel(tokens but without the label, label)
+   * Otherwise returns:
+   *  TokensLabel(tokens, null)
+   */
+  compiler.removeLabel = function(tokens) {
+    if (tokens.length == 0) {
+      return new compiler.TokensLabel(tokens, null)
+    } else {
+      var head = tokens[0]
+      var colonIndex = head.indexOf(":")
+
+      // if no colon in head
+      if (colonIndex <= 0) {
+        return new compiler.TokensLabel(tokens, null)
+      }
+      // if head contains only a label
+      else if (colonIndex == head.length - 1) {
+        var label = head.substr(0, head.length - 1)
+        var newTokens = _.rest(tokens)
+        return new compiler.TokensLabel(newTokens, label)
+      }
+      // if head contains a label and another token
+      else {
+        var label = head.substr(0, colonIndex)
+        var newHead = head.substr(colonIndex + 1, head.length)
+        // asert newHead.length > 0
+        tokens[0] = newHead
+        return new compiler.TokensLabel(tokens, label)
+      }
+    }
+  }
+
   return compiler
 })()

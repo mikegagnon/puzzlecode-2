@@ -106,16 +106,14 @@ PuzzleCode.compiler = (function(){
     }
   }
 
-  /**
-   * 
-   */
+  // Returns tokens, but with any comments removed
   compiler.removeComment = function(tokens) {
 
     // the index for the first token that contains "//"
     var commentIndex = _.findIndex(tokens, function(token){
       return token.indexOf("//") >= 0
     })
-    
+
     // if tokens does not contain a comment
     if (commentIndex < 0) {
       return tokens
@@ -132,6 +130,39 @@ PuzzleCode.compiler = (function(){
     }
   }
 
+  /**
+   * If tokens contains a label, then returns:
+   *  TokensLabel(tokens but without the label, label)
+   * Otherwise returns:
+   *  TokensLabel(tokens, null)
+   */
+  compiler.removeLabel = function(tokens) {
+    if (tokens.length == 0) {
+      return new compiler.TokensLabel(tokens, null)
+    } else {
+      var head = tokens[0]
+      var colonIndex = head.indexOf(":")
+
+      // if no colon in head
+      if (colonIndex <= 0) {
+        return new compiler.TokensLabel(tokens, null)
+      }
+      // if head contains only a label
+      else if (colonIndex == head.length - 1) {
+        var label = head.substr(0, head.length - 1)
+        var newTokens = _.rest(tokens)
+        return new compiler.TokensLabel(newTokens, label)
+      }
+      // if head contains a label and another token
+      else {
+        var label = head.substr(0, colonIndex)
+        var newHead = head.substr(colonIndex + 1, head.length)
+        // asert newHead.length > 0
+        tokens[0] = newHead
+        return new compiler.TokensLabel(tokens, label)
+      }
+    }
+  }
 
   return compiler
 })()
@@ -239,5 +270,43 @@ var cases = [
 
 _(cases).forEach(function(tc){
 	tc.output = PuzzleCode.compiler.removeComment(tc.tokens)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.removeLabel"
+var cases = [
+	{
+		tokens: 				[],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel([], null)
+	},
+	{
+		tokens: 				["1"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1"], null)
+	},
+	{
+		tokens: 				["a:"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel([], "a")
+	},
+	{
+		tokens: 				["1", "2", "3"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], null)
+	},
+	{
+		tokens: 				["a:", "1", "2", "3"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], "a")
+	},
+	{
+		tokens: 				["a:1", "2", "3"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], "a")
+	},
+	{
+		tokens: 				[":", "2", "3"],
+		expectedOutput: new PuzzleCode.compiler.TokensLabel([":", "2", "3"], null)
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = PuzzleCode.compiler.removeLabel(tc.tokens)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
