@@ -14,12 +14,23 @@
  * limitations under the License.
  */
 
-var FILENAME = "compiler_test.js"
+FILENAME = "compiler_test.js"
 
-/**
- * PuzzleCode.compiler.tokenize
- ******************************************************************************/
-var tokenize = [
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.tokenize"
+var cases = [
+	{
+		line: "",
+		expectedOutput: []
+	},
+	{
+		line: "  ",
+		expectedOutput: []
+	},
+	{
+		line: "test",
+		expectedOutput: ["test"]
+	},
 	{
 		line: "this is a test",
 		expectedOutput: ["this", "is", "a", "test"]
@@ -30,7 +41,41 @@ var tokenize = [
 	}
 ]
 
-_(tokenize).forEach(function(tc){
-	var output = PuzzleCode.compiler.tokenize(tc.line)
-	test(tc, _.isEqual(output, tc.expectedOutput))
+_(cases).forEach(function(tc){
+	tc.output = PuzzleCode.compiler.tokenize(tc.line)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.removeComment"
+var cases = [
+	{
+		tokens: 				["this", "is", "a", "test"],
+		expectedOutput: ["this", "is", "a", "test"]
+	},
+	{
+		tokens: 				["test", "//", "blah"],
+		expectedOutput: ["test"]
+	},
+	{
+		tokens: 				["test//blah"],
+		expectedOutput: ["test"]
+	},
+	{
+		tokens: 				["test", "//blah"],
+		expectedOutput: ["test"]
+	},
+	{
+		tokens: 				["//blah"],
+		expectedOutput: []
+	},
+	{
+		tokens: 				["//", "blah"],
+		expectedOutput: []
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = PuzzleCode.compiler.removeComment(tc.tokens)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })

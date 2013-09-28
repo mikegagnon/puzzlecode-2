@@ -1,9 +1,4 @@
 /**
- * Usage: assign appropriate values to TC_NAME, TC, RESULT, and TEST_FILENAME
- * The test fails if bool == false
- */
-
-/**
  * Copyright 2013 Michael N. Gagnon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,11 +15,11 @@
  */
 
 var FILENAME = undefined
+var TEST = undefined
 
 function test(testCase, bool) {
   if (!bool) {
-    alert("Failed test. See console logs for error messages.")
-    console.error("Failed test in " + FILENAME)
+    console.error("Failed test in " + FILENAME + ":" + TEST)
     console.dir(testCase)
   }
 }

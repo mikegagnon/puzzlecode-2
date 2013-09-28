@@ -19,7 +19,7 @@ PuzzleCode.compiler = (function(){
 
   /**
    * Enums
-   **********************************************************************************/
+   ****************************************************************************/
   compiler.Opcode = {
     MOVE: 0,
     TURN: 1,
@@ -28,7 +28,7 @@ PuzzleCode.compiler = (function(){
 
   /**
    * Data structures
-   **********************************************************************************/
+   ****************************************************************************/
   compiler.Instruction = function (
       // value must be in the Opcode enum
       opcode,
@@ -70,17 +70,29 @@ PuzzleCode.compiler = (function(){
 
   /**
    * Functions
-   **********************************************************************************/
+   ****************************************************************************/
 
+  /**
+   * Split line into words.
+   * Returns array of words, where each word does not begin or end with
+   * whitespace.
+   */
   compiler.tokenize = function(line) {
-    return line
+    var tokens = line
       .replace(/\s+/g, " ")
       .replace(/(^\s+)|(\s+$)/g, "")
       .split(" ")
+    if (_(tokens).isEqual([""])) {
+      return []
+    } else {
+      return tokens
+    }
   }
 
+  /**
+   * 
+   */
   compiler.removeComment = function(tokens) {
-    var commentToken = -1
     for (var i = 0; i < tokens.length; i++) {
       var token = tokens[i]
       var commentCharIndex = token.indexOf("//")
