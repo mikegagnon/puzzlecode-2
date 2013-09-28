@@ -110,19 +110,26 @@ PuzzleCode.compiler = (function(){
    * 
    */
   compiler.removeComment = function(tokens) {
-    for (var i = 0; i < tokens.length; i++) {
-      var token = tokens[i]
+
+    // the index for the first token that contains "//"
+    var commentIndex = _.findIndex(tokens, function(token){
+      return token.indexOf("//") >= 0
+    })
+    
+    // if tokens does not contain a comment
+    if (commentIndex < 0) {
+      return tokens
+    } else {
+      var token = tokens[commentIndex]
       var commentCharIndex = token.indexOf("//")
+      // if token begins with "//"
       if (commentCharIndex == 0) {
-        // completely exclude this token
-        return tokens.slice(0, i)
-      } else if (commentCharIndex > 0) {
-        // trim this token and exclude the rest
-        tokens[i] = token.substr(0, commentCharIndex)
-        return tokens.slice(0, i + 1)
+        return _.first(tokens, commentIndex)
+      } else {
+        tokens[commentIndex] = token.substr(0, commentCharIndex)
+        return _.first(tokens, commentIndex + 1)
       }
     }
-    return tokens
   }
 
 
