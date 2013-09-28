@@ -35,13 +35,22 @@ PuzzleCode.compiler = (function(){
   var compiler = {};
 
   /**
-   * Enums
+   * Constants
    ****************************************************************************/
   compiler.Opcode = {
     MOVE: 0,
     TURN: 1,
     GOTO: 2
   };
+
+  // map of reserved words
+  compiler.ReservedWords = {
+    "move": true,
+    "turn": true,
+    "left": true,
+    "right": true,
+    "goto": true
+  }
 
   /**
    * Data structures
