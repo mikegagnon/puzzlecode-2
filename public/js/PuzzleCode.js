@@ -35,24 +35,6 @@ PuzzleCode.compiler = (function(){
   var compiler = {};
 
   /**
-   * Constants
-   ****************************************************************************/
-  compiler.Opcode = {
-    MOVE: 0,
-    TURN: 1,
-    GOTO: 2
-  };
-
-  // map of reserved words
-  compiler.ReservedWords = {
-    "move": true,
-    "turn": true,
-    "left": true,
-    "right": true,
-    "goto": true
-  }
-
-  /**
    * Data structures
    ****************************************************************************/
   compiler.Instruction = function (
@@ -61,17 +43,17 @@ PuzzleCode.compiler = (function(){
       // data object, whose type is determined by opcode
       data,
       // from program text
-      lineIndex,
       comment,
-      error,
-      label
+      error,      
+      label,
+      lineIndex
       ) {
     this.opcode = opcode
     this.data = data
-    this.lineIndex = lineIndex
     this.comment = comment
     this.error = error
     this.label = label
+    this.lineIndex = lineIndex
   }
 
   compiler.Program = function(
@@ -89,9 +71,42 @@ PuzzleCode.compiler = (function(){
     this.constraintViolation = constraintViolation
   }
 
-  compiler.TokensLabel = function(tokens, label) {
+  compiler.TokensLabel = function(
+      tokens,
+      label) {
     this.tokens = tokens
     this.label = label
+  }
+
+  compiler.ErrorMessage = function(
+      message,
+      url) {
+    this.message = message
+    this.url = message
+  }
+
+  /**
+   * Constants
+   ****************************************************************************/
+  compiler.Opcode = {
+    MOVE: 0,
+    TURN: 1,
+    GOTO: 2
+  }
+
+  // map of reserved words
+  compiler.ReservedWords = {
+    "move": true,
+    "turn": true,
+    "left": true,
+    "right": true,
+    "goto": true
+  }
+
+  compiler.Error = {
+    MALFORMED_MOVE: new compiler.ErrorMessage(
+      "Malformed 'move' instruction",
+      PuzzleCode.HELP_URL + "malformed_move")
   }
 
   /**
@@ -173,6 +188,28 @@ PuzzleCode.compiler = (function(){
     }
   }
 
+  // Returns an Instruction object populated with: opcode, data, comment, error 
+  compiler.compileMove = function(tokens) {
+
+    PuzzleCode.assert("tokens[0] must == 'move'", function(){
+      return tokens[0] == "move"
+    })
+
+    var instruction = null
+    var comment = null
+    var error = false
+
+    if (tokens.length == 1) {
+      error = false
+      comment = null
+    } else {
+      error = true
+      comment = compiler.Error.MALFORMED_MOVE
+    }
+
+    return new compiler.Instruction(compiler.Opcode.MOVE, null, comment, error)
+  }
+
   return compiler
 })()
 /**
@@ -241,6 +278,8 @@ function test(testCase, bool) {
 
 FILENAME = "compiler_test.js"
 
+var compiler = PuzzleCode.compiler
+
 /******************************************************************************/
 TEST = "PuzzleCode.compiler.tokenize"
 var cases = [
@@ -267,7 +306,7 @@ var cases = [
 ]
 
 _(cases).forEach(function(tc){
-	tc.output = PuzzleCode.compiler.tokenize(tc.line)
+	tc.output = compiler.tokenize(tc.line)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
 
@@ -301,7 +340,7 @@ var cases = [
 ]
 
 _(cases).forEach(function(tc){
-	tc.output = PuzzleCode.compiler.removeComment(tc.tokens)
+	tc.output = compiler.removeComment(tc.tokens)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
 
@@ -310,35 +349,55 @@ TEST = "PuzzleCode.compiler.removeLabel"
 var cases = [
 	{
 		tokens: 				[],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel([], null)
+		expectedOutput: new compiler.TokensLabel([], null)
 	},
 	{
 		tokens: 				["1"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1"], null)
+		expectedOutput: new compiler.TokensLabel(["1"], null)
 	},
 	{
 		tokens: 				["a:"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel([], "a")
+		expectedOutput: new compiler.TokensLabel([], "a")
 	},
 	{
 		tokens: 				["1", "2", "3"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], null)
+		expectedOutput: new compiler.TokensLabel(["1", "2", "3"], null)
 	},
 	{
 		tokens: 				["a:", "1", "2", "3"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], "a")
+		expectedOutput: new compiler.TokensLabel(["1", "2", "3"], "a")
 	},
 	{
 		tokens: 				["a:1", "2", "3"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], "a")
+		expectedOutput: new compiler.TokensLabel(["1", "2", "3"], "a")
 	},
 	{
 		tokens: 				[":", "2", "3"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel([":", "2", "3"], null)
+		expectedOutput: new compiler.TokensLabel([":", "2", "3"], null)
 	},
 ]
 
 _(cases).forEach(function(tc){
-	tc.output = PuzzleCode.compiler.removeLabel(tc.tokens)
+	tc.output = compiler.removeLabel(tc.tokens)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compileMove"
+var cases = [
+	{
+		tokens: 				["move"],
+		expectedOutput: new compiler.Instruction(compiler.Opcode.MOVE, null, null,
+			false)
+	},
+	{
+		tokens: 				["move", "foo"],
+		expectedOutput: new compiler.Instruction(compiler.Opcode.MOVE, null,
+			compiler.Error.MALFORMED_MOVE, true)
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compileMove(tc.tokens)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })

@@ -16,6 +16,8 @@
 
 FILENAME = "compiler_test.js"
 
+var compiler = PuzzleCode.compiler
+
 /******************************************************************************/
 TEST = "PuzzleCode.compiler.tokenize"
 var cases = [
@@ -42,7 +44,7 @@ var cases = [
 ]
 
 _(cases).forEach(function(tc){
-	tc.output = PuzzleCode.compiler.tokenize(tc.line)
+	tc.output = compiler.tokenize(tc.line)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
 
@@ -76,7 +78,7 @@ var cases = [
 ]
 
 _(cases).forEach(function(tc){
-	tc.output = PuzzleCode.compiler.removeComment(tc.tokens)
+	tc.output = compiler.removeComment(tc.tokens)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
 
@@ -85,35 +87,55 @@ TEST = "PuzzleCode.compiler.removeLabel"
 var cases = [
 	{
 		tokens: 				[],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel([], null)
+		expectedOutput: new compiler.TokensLabel([], null)
 	},
 	{
 		tokens: 				["1"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1"], null)
+		expectedOutput: new compiler.TokensLabel(["1"], null)
 	},
 	{
 		tokens: 				["a:"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel([], "a")
+		expectedOutput: new compiler.TokensLabel([], "a")
 	},
 	{
 		tokens: 				["1", "2", "3"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], null)
+		expectedOutput: new compiler.TokensLabel(["1", "2", "3"], null)
 	},
 	{
 		tokens: 				["a:", "1", "2", "3"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], "a")
+		expectedOutput: new compiler.TokensLabel(["1", "2", "3"], "a")
 	},
 	{
 		tokens: 				["a:1", "2", "3"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel(["1", "2", "3"], "a")
+		expectedOutput: new compiler.TokensLabel(["1", "2", "3"], "a")
 	},
 	{
 		tokens: 				[":", "2", "3"],
-		expectedOutput: new PuzzleCode.compiler.TokensLabel([":", "2", "3"], null)
+		expectedOutput: new compiler.TokensLabel([":", "2", "3"], null)
 	},
 ]
 
 _(cases).forEach(function(tc){
-	tc.output = PuzzleCode.compiler.removeLabel(tc.tokens)
+	tc.output = compiler.removeLabel(tc.tokens)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compileMove"
+var cases = [
+	{
+		tokens: 				["move"],
+		expectedOutput: new compiler.Instruction(compiler.Opcode.MOVE, null, null,
+			false)
+	},
+	{
+		tokens: 				["move", "foo"],
+		expectedOutput: new compiler.Instruction(compiler.Opcode.MOVE, null,
+			compiler.Error.MALFORMED_MOVE, true)
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compileMove(tc.tokens)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
