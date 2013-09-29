@@ -244,6 +244,5 @@ PuzzleCode.compiler = (function(){
     return new compiler.Instruction(compiler.Opcode.TURN, data, comment, error)
   }
 
-
   return compiler
 })()
