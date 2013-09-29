@@ -121,6 +121,33 @@ _(cases).forEach(function(tc){
 })
 
 /******************************************************************************/
+TEST = "PuzzleCode.compiler.isValidLabel"
+
+var LONGEST_TOKEN = _(compiler.MAX_TOKEN_LENGTH)
+	.times()
+	.map(function(){return 'x'})
+	.join("")
+
+var cases = [
+	{ expectedOutput: true, label: "x" },
+	{ expectedOutput: true, label: "x1" },
+	{ expectedOutput: true, label: "foo" },
+	{ expectedOutput: true, label: "foo" },
+	{ expectedOutput: true, label: LONGEST_TOKEN },
+	{ expectedOutput: false, label: "" },
+	{ expectedOutput: false, label: "goto" },
+	{ expectedOutput: false, label: "move" },
+	{ expectedOutput: false, label: "1x" },
+	{ expectedOutput: false, label: "x-1" },
+	{ expectedOutput: false, label: LONGEST_TOKEN + "x" },
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.isValidLabel(tc.label)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
 TEST = "PuzzleCode.compiler.compileMove"
 var cases = [
 	{
@@ -187,5 +214,23 @@ var cases = [
 
 _(cases).forEach(function(tc){
 	tc.output = compiler.compileTurn(tc.tokens)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compileGoto"
+var cases = [
+	{
+		tokens: ["goto", "bar"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.GOTO,
+			"bar",
+			null,
+			false)
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compileGoto(tc.tokens)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })

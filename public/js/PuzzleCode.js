@@ -88,7 +88,6 @@ PuzzleCode.compiler = (function(){
   /**
    * Constants
    ****************************************************************************/
-
   compiler.Opcode = {
     MOVE: 0,
     TURN: 1,
@@ -96,7 +95,7 @@ PuzzleCode.compiler = (function(){
   }
 
   // map of reserved words
-  compiler.ReservedWords = {
+  compiler.RESERVED_WORDS = {
     "move": true,
     "turn": true,
     "left": true,
@@ -104,8 +103,14 @@ PuzzleCode.compiler = (function(){
     "goto": true
   }
 
-  compiler.MAX_TOKEN_LENGTH = 40,
+  compiler.MAX_TOKEN_LENGTH = 5,
 
+  // regex for identifiers
+  compiler.IDENT_REGEX = /^[A-Za-z][A-Za-z0-9_]*$/
+
+  /**
+   * Compilation errors
+   ****************************************************************************/
   compiler.Error = {
     MALFORMED_MOVE: new compiler.ErrorMessage(
       "Malformed 'move' instruction",
@@ -139,9 +144,15 @@ PuzzleCode.compiler = (function(){
   /**
    * Functions for tokenizing text and operating on tokens
    ****************************************************************************/
-
   compiler.trim = function(token) {
     return token.slice(0, compiler.MAX_TOKEN_LENGTH)
+  }
+
+  compiler.isValidLabel = function(label) {
+    return label.length > 0 &&
+      label.length <= compiler.MAX_TOKEN_LENGTH &&
+      !(label in compiler.RESERVED_WORDS) &&
+      compiler.IDENT_REGEX.test(label)
   }
 
   /**
@@ -295,7 +306,7 @@ PuzzleCode.compiler = (function(){
       error = true
     } else {
       var label = tokens[1]
-      if (!isValidLabel(label)) {
+      if (!compiler.isValidLabel(label)) {
         comment = compiler.Error.gotoWithInvalidLabel(label)
         error = true
       } else {
@@ -306,7 +317,6 @@ PuzzleCode.compiler = (function(){
 
     return new compiler.Instruction(compiler.Opcode.GOTO, label, comment, error)
   }
-
 
   return compiler
 })()
@@ -577,6 +587,40 @@ _(cases).forEach(function(tc){
 })
 
 /******************************************************************************/
+TEST = "PuzzleCode.compiler.isValidLabel"
+/*
+compiler.isValidLabel = function(label) {
+    return label.length > 0 &&
+      label.length < compiler.MAX_TOKEN_LENGTH &&
+      !(label in compiler.RESERVED_WORDS) &&
+      compiler.IDENT_REGEX.test(label)
+  }
+*/
+var LONGEST_TOKEN = _(compiler.MAX_TOKEN_LENGTH)
+	.times()
+	.map(function(){return 'x'})
+	.join("")
+
+var cases = [
+	{ expectedOutput: true, label: "x" },
+	{ expectedOutput: true, label: "x1" },
+	{ expectedOutput: true, label: "foo" },
+	{ expectedOutput: true, label: "foo" },
+	{ expectedOutput: true, label: LONGEST_TOKEN },
+	{ expectedOutput: false, label: "" },
+	{ expectedOutput: false, label: "goto" },
+	{ expectedOutput: false, label: "move" },
+	{ expectedOutput: false, label: "1x" },
+	{ expectedOutput: false, label: "x-1" },
+	{ expectedOutput: false, label: LONGEST_TOKEN + "x" },
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.isValidLabel(tc.label)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
 TEST = "PuzzleCode.compiler.compileMove"
 var cases = [
 	{
@@ -643,6 +687,24 @@ var cases = [
 
 _(cases).forEach(function(tc){
 	tc.output = compiler.compileTurn(tc.tokens)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compileGoto"
+var cases = [
+	{
+		tokens: ["goto", "bar"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.GOTO,
+			"bar",
+			null,
+			false)
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compileGoto(tc.tokens)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
 /**

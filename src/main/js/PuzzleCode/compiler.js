@@ -78,7 +78,7 @@ PuzzleCode.compiler = (function(){
   }
 
   // map of reserved words
-  compiler.ReservedWords = {
+  compiler.RESERVED_WORDS = {
     "move": true,
     "turn": true,
     "left": true,
@@ -86,7 +86,10 @@ PuzzleCode.compiler = (function(){
     "goto": true
   }
 
-  compiler.MAX_TOKEN_LENGTH = 40,
+  compiler.MAX_TOKEN_LENGTH = 5,
+
+  // regex for identifiers
+  compiler.IDENT_REGEX = /^[A-Za-z][A-Za-z0-9_]*$/
 
   /**
    * Compilation errors
@@ -126,6 +129,13 @@ PuzzleCode.compiler = (function(){
    ****************************************************************************/
   compiler.trim = function(token) {
     return token.slice(0, compiler.MAX_TOKEN_LENGTH)
+  }
+
+  compiler.isValidLabel = function(label) {
+    return label.length > 0 &&
+      label.length <= compiler.MAX_TOKEN_LENGTH &&
+      !(label in compiler.RESERVED_WORDS) &&
+      compiler.IDENT_REGEX.test(label)
   }
 
   /**
@@ -279,7 +289,7 @@ PuzzleCode.compiler = (function(){
       error = true
     } else {
       var label = tokens[1]
-      if (!isValidLabel(label)) {
+      if (!compiler.isValidLabel(label)) {
         comment = compiler.Error.gotoWithInvalidLabel(label)
         error = true
       } else {
