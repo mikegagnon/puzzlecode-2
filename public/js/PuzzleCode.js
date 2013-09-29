@@ -80,14 +80,15 @@ PuzzleCode.compiler = (function(){
 
   compiler.ErrorMessage = function(
       message,
-      url) {
+      urlKeyword) {
     this.message = message
-    this.url = url
+    this.urlKeyword = urlKeyword
   }
 
   /**
    * Constants
    ****************************************************************************/
+
   compiler.Opcode = {
     MOVE: 0,
     TURN: 1,
@@ -103,16 +104,26 @@ PuzzleCode.compiler = (function(){
     "goto": true
   }
 
+  compiler.MAX_TOKEN_LENGTH = 40,
+
   compiler.Error = {
     MALFORMED_MOVE: new compiler.ErrorMessage(
       "Malformed 'move' instruction",
-      PuzzleCode.HELP_URL + "malformed_move"),
+      "malformed_move"),
     TURN_WITHOUT_DIRECTION: new compiler.ErrorMessage(
       "The 'turn' instruction is missing a direction",
-      PuzzleCode.HELP_URL + "turn_without_direction"),
+      "turn_without_direction"),
     MALFORMED_TURN: new compiler.ErrorMessage(
       "Malformed 'turn' instruction",
-      PuzzleCode.HELP_URL + "malformed_turn")
+      "malformed_turn"),
+    GOTO_WITHOUT_LABEL: new compiler.ErrorMessage(
+      "The 'goto' instruction is missing a label",
+      "goto_without_label"
+      ),
+    MALFORMED_GOTO: new compiler.ErrorMessage(
+      "Malformed 'goto' instruction",
+      "malformed_goto"
+      )
   }
 
   /**
@@ -121,13 +132,23 @@ PuzzleCode.compiler = (function(){
 
   compiler.errorTurnWithBadDirection = function(direction) {
     return new compiler.ErrorMessage(
-      "'" + direction + "' is not a valid direction",
-      PuzzleCode.HELP_URL + "turn_with_bad_direction")
+      "'" + compiler.trim(direction) + "' is not a valid direction",
+      "turn_with_bad_direction")
+  }
+
+  compiler.errorGotoWithInvalidLabel = function(label) {
+    return new compiler.ErrorMessage(
+      "'" + compiler.trim(label) + "' is not a valid label",
+      "goto_with_invalid_label")
   }
 
   /**
    * Functions for tokenizing text and operating on tokens
    ****************************************************************************/
+
+  compiler.trim = function(token) {
+    return token.slice(0, compiler.MAX_TOKEN_LENGTH)
+  }
 
   /**
    * Split line into words.
@@ -260,6 +281,38 @@ PuzzleCode.compiler = (function(){
 
     return new compiler.Instruction(compiler.Opcode.TURN, data, comment, error)
   }
+
+  // Returns an Instruction object populated with: opcode, data, comment, error
+  compiler.compileGoto = function(tokens) {
+
+    PuzzleCode.assert("tokens[0] must == 'goto'", function(){
+      return tokens[0] == "goto"
+    })
+
+    var instruction = null
+    var comment = null
+    var error = false
+
+    if (tokens.length == 1) {
+      comment = compiler.Error.GOTO_WITHOUT_LABEL
+      error = true
+    } else if (tokens.length > 2) {
+      comment = compiler.Error.MALFORMED_GOTO
+      error = true
+    } else {
+      var label = tokens[1]
+      if (!isValidLabel(label)) {
+        comment = compiler.Error.errorGotoWithInvalidLabel(label)
+        error = true
+      } else {
+        comment = null
+        error = false
+      }
+    }
+
+    return new compiler.Instruction(compiler.Opcode.GOTO, label, comment, error)
+  }
+
 
   return compiler
 })()
