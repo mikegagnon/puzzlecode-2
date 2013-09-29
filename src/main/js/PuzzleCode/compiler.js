@@ -293,9 +293,6 @@ PuzzleCode.compiler = (function(){
         comment = compiler.Error.gotoWithInvalidLabel(label)
         label = null
         error = true
-      } else {
-        comment = null
-        error = false
       }
     }
 
