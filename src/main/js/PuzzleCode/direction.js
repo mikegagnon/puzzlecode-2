@@ -14,15 +14,24 @@
  * limitations under the License.
  */
 
- PuzzleCode.direction = {
 
-  NUM_DIRECTIONS: 4,
-  UP: 0,
-  DOWN: 1,
-  LEFT: 2,
-  RIGHT: 3,
+PuzzleCode.direction = (function(){
 
-	rotateLeft: function(direction) {
+	var direction = {}
+
+  /**
+   * Constants
+   ****************************************************************************/
+	direction.NUM_DIRECTIONS = 4
+	direction.UP = 0
+	direction.DOWN = 1
+	direction.LEFT = 2
+	direction.RIGHT = 3
+
+	/**
+   * Functions
+   ****************************************************************************/
+   direction.rotateLeft = function(direction) {
 	  if (direction == this.LEFT) {
 	    return this.DOWN
 	  } else if (direction == this.DOWN) {
@@ -35,9 +44,9 @@
 	    PuzzleCode.assert("rotateLeft(" + direction + ") invalid direction",
 	    	function(){ return false })
 	  }
-	},
+	}
 
-	rotateRight: function(direction) {
+	direction.rotateRight = function(direction) {
 	  if (direction == this.LEFT) {
 	    return this.UP
 	  } else if (direction == this.UP) {
@@ -50,9 +59,9 @@
 	    PuzzleCode.assert("rotateRight(" + direction + ") invalid direction",
 	    	function(){ return false })
 	  }
-	},
+	}
 
-	rotateDirection: function(oldFacing, rotateDirection) {
+	direction.rotateDirection = function(oldFacing, rotateDirection) {
 	  if (rotateDirection == this.LEFT) {
 	    return this.rotateLeft(oldFacing)
 	  } else if (rotateDirection == this.RIGHT) {
@@ -63,8 +72,9 @@
 	  }
 	},
 
-	oppositeDirection: function(direction) {
+	direction.oppositeDirection = function(direction) {
 	  return this.rotateLeft(this.rotateLeft(direction))
 	}
- }
- 
+
+	return direction
+})()
