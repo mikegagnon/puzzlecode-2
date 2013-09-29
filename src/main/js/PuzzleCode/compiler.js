@@ -65,7 +65,7 @@ PuzzleCode.compiler = (function(){
       message,
       url) {
     this.message = message
-    this.url = message
+    this.url = url
   }
 
   /**
@@ -89,11 +89,27 @@ PuzzleCode.compiler = (function(){
   compiler.Error = {
     MALFORMED_MOVE: new compiler.ErrorMessage(
       "Malformed 'move' instruction",
-      PuzzleCode.HELP_URL + "malformed_move")
+      PuzzleCode.HELP_URL + "malformed_move"),
+    TURN_WITHOUT_DIRECTION: new compiler.ErrorMessage(
+      "The 'turn' instruction is missing a direction",
+      PuzzleCode.HELP_URL + "turn_without_direction"),
+    MALFORMED_TURN: new compiler.ErrorMessage(
+      "Malformed 'turn' instruction",
+      PuzzleCode.HELP_URL + "malformed_turn")
   }
 
   /**
-   * Functions
+   * Functions for generating specific error messages
+   ****************************************************************************/
+
+  compiler.errorTurnWithBadDirection = function(direction) {
+    return new compiler.ErrorMessage(
+      "'" + direction + "' is not a valid direction",
+      PuzzleCode.HELP_URL + "turn_with_bad_direction")
+  }
+
+  /**
+   * Functions for tokenizing text and operating on tokens
    ****************************************************************************/
 
   /**
@@ -171,6 +187,10 @@ PuzzleCode.compiler = (function(){
     }
   }
 
+  /**
+   * Functions for compiling specific instructions
+   ****************************************************************************/
+
   // Returns an Instruction object populated with: opcode, data, comment, error 
   compiler.compileMove = function(tokens) {
 
@@ -183,7 +203,6 @@ PuzzleCode.compiler = (function(){
     var error = false
 
     if (tokens.length == 1) {
-      error = false
       comment = null
     } else {
       error = true
@@ -192,6 +211,39 @@ PuzzleCode.compiler = (function(){
 
     return new compiler.Instruction(compiler.Opcode.MOVE, null, comment, error)
   }
+
+  // Returns an Instruction object populated with: opcode, data, comment, error
+  compiler.compileTurn = function(tokens) {
+
+    PuzzleCode.assert("tokens[0] must == 'turn'", function(){
+      return tokens[0] == "turn"
+    })
+
+    var comment = null
+    var error = false
+    var data = null
+
+    if (tokens.length == 1) {
+      comment = compiler.Error.TURN_WITHOUT_DIRECTION
+      error = true
+    } else if (tokens.length > 2) {
+      comment = compiler.Error.MALFORMED_TURN
+      error = true
+    } else {
+      var direction = tokens[1]
+      if (direction == "left") {
+        data = PuzzleCode.direction.LEFT
+      } else if (direction == "right") {
+        data = PuzzleCode.direction.RIGHT
+      } else {
+        comment = compiler.errorTurnWithBadDirection(direction)
+        error = true
+      }
+    }
+
+    return new compiler.Instruction(compiler.Opcode.TURN, data, comment, error)
+  }
+
 
   return compiler
 })()

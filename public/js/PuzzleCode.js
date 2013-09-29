@@ -82,7 +82,7 @@ PuzzleCode.compiler = (function(){
       message,
       url) {
     this.message = message
-    this.url = message
+    this.url = url
   }
 
   /**
@@ -106,11 +106,27 @@ PuzzleCode.compiler = (function(){
   compiler.Error = {
     MALFORMED_MOVE: new compiler.ErrorMessage(
       "Malformed 'move' instruction",
-      PuzzleCode.HELP_URL + "malformed_move")
+      PuzzleCode.HELP_URL + "malformed_move"),
+    TURN_WITHOUT_DIRECTION: new compiler.ErrorMessage(
+      "The 'turn' instruction is missing a direction",
+      PuzzleCode.HELP_URL + "turn_without_direction"),
+    MALFORMED_TURN: new compiler.ErrorMessage(
+      "Malformed 'turn' instruction",
+      PuzzleCode.HELP_URL + "malformed_turn")
   }
 
   /**
-   * Functions
+   * Functions for generating specific error messages
+   ****************************************************************************/
+
+  compiler.errorTurnWithBadDirection = function(direction) {
+    return new compiler.ErrorMessage(
+      "'" + direction + "' is not a valid direction",
+      PuzzleCode.HELP_URL + "turn_with_bad_direction")
+  }
+
+  /**
+   * Functions for tokenizing text and operating on tokens
    ****************************************************************************/
 
   /**
@@ -188,6 +204,10 @@ PuzzleCode.compiler = (function(){
     }
   }
 
+  /**
+   * Functions for compiling specific instructions
+   ****************************************************************************/
+
   // Returns an Instruction object populated with: opcode, data, comment, error 
   compiler.compileMove = function(tokens) {
 
@@ -200,7 +220,6 @@ PuzzleCode.compiler = (function(){
     var error = false
 
     if (tokens.length == 1) {
-      error = false
       comment = null
     } else {
       error = true
@@ -210,9 +229,58 @@ PuzzleCode.compiler = (function(){
     return new compiler.Instruction(compiler.Opcode.MOVE, null, comment, error)
   }
 
+  // Returns an Instruction object populated with: opcode, data, comment, error
+  compiler.compileTurn = function(tokens) {
+
+    PuzzleCode.assert("tokens[0] must == 'turn'", function(){
+      return tokens[0] == "turn"
+    })
+
+    var comment = null
+    var error = false
+    var data = null
+
+    if (tokens.length == 1) {
+      comment = compiler.Error.TURN_WITHOUT_DIRECTION
+      error = true
+    } else if (tokens.length > 2) {
+      comment = compiler.Error.MALFORMED_TURN
+      error = true
+    } else {
+      var direction = tokens[1]
+      if (direction == "left") {
+        data = PuzzleCode.direction.LEFT
+      } else if (direction == "right") {
+        data = PuzzleCode.direction.RIGHT
+      } else {
+        comment = compiler.errorTurnWithBadDirection(direction)
+        error = true
+      }
+    }
+
+    return new compiler.Instruction(compiler.Opcode.TURN, data, comment, error)
+  }
+
+
   return compiler
 })()
 /**
+ * Copyright 2013 Michael N. Gagnon
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+ PuzzleCode.HELP_URL = "http://puzzlecode.org/help/"/**
  * Copyright 2013 Michael N. Gagnon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -236,6 +304,74 @@ PuzzleCode.assert = function(message, func) {
     console.error(message)
   }
 }/**
+ * Copyright 2013 Michael N. Gagnon
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+ PuzzleCode.direction = {
+
+  NUM_DIRECTIONS: 4,
+  UP: 0,
+  DOWN: 1,
+  LEFT: 2,
+  RIGHT: 3,
+
+	rotateLeft: function(direction) {
+	  if (direction == this.LEFT) {
+	    return this.DOWN
+	  } else if (direction == this.DOWN) {
+	    return this.RIGHT
+	  } else if (direction == this.RIGHT) {
+	    return this.UP
+	  } else if (direction == this.UP) {
+	    return this.LEFT
+	  } else {
+	    PuzzleCode.assert("rotateLeft(" + direction + ") invalid direction",
+	    	function(){ return false })
+	  }
+	},
+
+	rotateRight: function(direction) {
+	  if (direction == this.LEFT) {
+	    return this.UP
+	  } else if (direction == this.UP) {
+	    return this.RIGHT
+	  } else if (direction == this.RIGHT) {
+	    return this.DOWN
+	  } else if (direction == this.DOWN) {
+	    return this.LEFT
+	  } else {
+	    PuzzleCode.assert("rotateRight(" + direction + ") invalid direction",
+	    	function(){ return false })
+	  }
+	},
+
+	rotateDirection: function(oldFacing, rotateDirection) {
+	  if (rotateDirection == this.LEFT) {
+	    return this.rotateLeft(oldFacing)
+	  } else if (rotateDirection == this.RIGHT) {
+	    return this.rotateRight(oldFacing)
+	  } else {
+	    PuzzleCode.assert("rotateDirection(" + direction + ") invalid direction",
+	    	function(){ return false })
+	  }
+	},
+
+	oppositeDirection: function(direction) {
+	  return this.rotateLeft(this.rotateLeft(direction))
+	}
+ }/**
  * Copyright 2013 Michael N. Gagnon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -399,5 +535,172 @@ var cases = [
 
 _(cases).forEach(function(tc){
 	tc.output = compiler.compileMove(tc.tokens)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compileTurn"
+var cases = [
+	{
+		tokens: ["turn", "left"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.TURN,
+			PuzzleCode.direction.LEFT,
+			null,
+			false)
+	},
+	{
+		tokens: ["turn", "right"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.TURN,
+			PuzzleCode.direction.RIGHT,
+			null,
+			false)
+	},
+	{
+		tokens: ["turn"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.TURN,
+			null,
+			compiler.Error.TURN_WITHOUT_DIRECTION,
+			true)
+	},
+	{
+		tokens: ["turn", "left", "right"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.TURN,
+			null,
+			compiler.Error.MALFORMED_TURN,
+			true)
+	},
+	{
+		tokens: ["turn", "foo"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.TURN,
+			null,
+			compiler.errorTurnWithBadDirection("foo"),
+			true)
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compileTurn(tc.tokens)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+/**
+ * Copyright 2013 Michael N. Gagnon
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+FILENAME = "direction_test.js"
+
+var direction = PuzzleCode.direction
+
+/******************************************************************************/
+TEST = "PuzzleCode.direction.rotateLeft"
+var cases = [
+	{
+		direction: 			direction.UP,
+		expectedOutput: direction.LEFT
+	},
+	{
+		direction: 			direction.LEFT,
+		expectedOutput: direction.DOWN
+	},
+	{
+		direction: 			direction.DOWN,
+		expectedOutput: direction.RIGHT
+	},
+	{
+		direction: 			direction.RIGHT,
+		expectedOutput: direction.UP
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = direction.rotateLeft(tc.direction)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.direction.rotateRight"
+var cases = [
+	{
+		direction: 			direction.UP,
+		expectedOutput: direction.RIGHT
+	},
+	{
+		direction: 			direction.RIGHT,
+		expectedOutput: direction.DOWN
+	},
+	{
+		direction: 			direction.DOWN,
+		expectedOutput: direction.LEFT
+	},
+	{
+		direction: 			direction.LEFT,
+		expectedOutput: direction.UP
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = direction.rotateRight(tc.direction)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.direction.rotateDirection"
+var cases = [
+	{
+		oldFacing:        direction.UP,
+		rotateDirection: 	direction.RIGHT,
+		expectedOutput: 	direction.RIGHT
+	},
+	{
+		oldFacing:        direction.LEFT,
+		rotateDirection: 	direction.LEFT,
+		expectedOutput: 	direction.DOWN
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = direction.rotateDirection(tc.oldFacing, tc.rotateDirection)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.direction.oppositeDirection"
+var cases = [
+	{
+		direction: 			direction.UP,
+		expectedOutput: direction.DOWN
+	},
+	{
+		direction: 			direction.DOWN,
+		expectedOutput: direction.UP
+	},
+	{
+		direction: 			direction.LEFT,
+		expectedOutput: direction.RIGHT
+	},
+	{
+		direction: 			direction.RIGHT,
+		expectedOutput: direction.LEFT
+	}
+]
+
+_(cases).forEach(function(tc){
+	tc.output = direction.oppositeDirection(tc.direction)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })

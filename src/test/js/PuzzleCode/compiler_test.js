@@ -139,3 +139,53 @@ _(cases).forEach(function(tc){
 	tc.output = compiler.compileMove(tc.tokens)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compileTurn"
+var cases = [
+	{
+		tokens: ["turn", "left"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.TURN,
+			PuzzleCode.direction.LEFT,
+			null,
+			false)
+	},
+	{
+		tokens: ["turn", "right"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.TURN,
+			PuzzleCode.direction.RIGHT,
+			null,
+			false)
+	},
+	{
+		tokens: ["turn"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.TURN,
+			null,
+			compiler.Error.TURN_WITHOUT_DIRECTION,
+			true)
+	},
+	{
+		tokens: ["turn", "left", "right"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.TURN,
+			null,
+			compiler.Error.MALFORMED_TURN,
+			true)
+	},
+	{
+		tokens: ["turn", "foo"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.TURN,
+			null,
+			compiler.errorTurnWithBadDirection("foo"),
+			true)
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compileTurn(tc.tokens)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
