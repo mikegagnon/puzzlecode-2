@@ -335,49 +335,49 @@ PuzzleCode.direction = (function(){
 	/**
    * Functions
    ****************************************************************************/
-   direction.rotateLeft = function(direction) {
-	  if (direction == this.LEFT) {
-	    return this.DOWN
-	  } else if (direction == this.DOWN) {
-	    return this.RIGHT
-	  } else if (direction == this.RIGHT) {
-	    return this.UP
-	  } else if (direction == this.UP) {
-	    return this.LEFT
+   direction.rotateLeft = function(dir) {
+	  if (dir == direction.LEFT) {
+	    return direction.DOWN
+	  } else if (dir == direction.DOWN) {
+	    return direction.RIGHT
+	  } else if (dir == direction.RIGHT) {
+	    return direction.UP
+	  } else if (dir == direction.UP) {
+	    return direction.LEFT
 	  } else {
-	    PuzzleCode.assert("rotateLeft(" + direction + ") invalid direction",
+	    PuzzleCode.assert("rotateLeft(" + dir + ") invalid direction",
 	    	function(){ return false })
 	  }
 	}
 
-	direction.rotateRight = function(direction) {
-	  if (direction == this.LEFT) {
-	    return this.UP
-	  } else if (direction == this.UP) {
-	    return this.RIGHT
-	  } else if (direction == this.RIGHT) {
-	    return this.DOWN
-	  } else if (direction == this.DOWN) {
-	    return this.LEFT
+	direction.rotateRight = function(dir) {
+	  if (dir == direction.LEFT) {
+	    return direction.UP
+	  } else if (dir == direction.UP) {
+	    return direction.RIGHT
+	  } else if (dir == direction.RIGHT) {
+	    return direction.DOWN
+	  } else if (dir == direction.DOWN) {
+	    return direction.LEFT
 	  } else {
-	    PuzzleCode.assert("rotateRight(" + direction + ") invalid direction",
+	    PuzzleCode.assert("rotateRight(" + dir + ") invalid direction",
 	    	function(){ return false })
 	  }
 	}
 
-	direction.rotateDirection = function(oldFacing, rotateDirection) {
-	  if (rotateDirection == this.LEFT) {
-	    return this.rotateLeft(oldFacing)
-	  } else if (rotateDirection == this.RIGHT) {
-	    return this.rotateRight(oldFacing)
+	direction.rotateDirection = function(oldFacing, rotateDir) {
+	  if (rotateDir == direction.LEFT) {
+	    return direction.rotateLeft(oldFacing)
+	  } else if (rotateDir == direction.RIGHT) {
+	    return direction.rotateRight(oldFacing)
 	  } else {
-	    PuzzleCode.assert("rotateDirection(" + direction + ") invalid direction",
+	    PuzzleCode.assert("rotateDirection(" + rotateDir + ") invalid direction",
 	    	function(){ return false })
 	  }
 	},
 
-	direction.oppositeDirection = function(direction) {
-	  return this.rotateLeft(this.rotateLeft(direction))
+	direction.oppositeDirection = function(dir) {
+	  return direction.rotateLeft(direction.rotateLeft(dir))
 	}
 
 	return direction
