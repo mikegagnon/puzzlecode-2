@@ -67,3 +67,4 @@
 	  return this.rotateLeft(this.rotateLeft(direction))
 	}
  }
+ 

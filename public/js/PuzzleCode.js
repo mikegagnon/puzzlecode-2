@@ -261,7 +261,6 @@ PuzzleCode.compiler = (function(){
     return new compiler.Instruction(compiler.Opcode.TURN, data, comment, error)
   }
 
-
   return compiler
 })()
 /**
@@ -371,7 +370,8 @@ PuzzleCode.assert = function(message, func) {
 	oppositeDirection: function(direction) {
 	  return this.rotateLeft(this.rotateLeft(direction))
 	}
- }/**
+ }
+ /**
  * Copyright 2013 Michael N. Gagnon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
