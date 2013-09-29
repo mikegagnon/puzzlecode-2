@@ -277,7 +277,7 @@ PuzzleCode.compiler = (function(){
       return tokens[0] == "goto"
     })
 
-    var instruction = null
+    var label = null
     var comment = null
     var error = false
 
@@ -288,9 +288,10 @@ PuzzleCode.compiler = (function(){
       comment = compiler.Error.MALFORMED_GOTO
       error = true
     } else {
-      var label = tokens[1]
+      label = tokens[1]
       if (!compiler.isValidLabel(label)) {
         comment = compiler.Error.gotoWithInvalidLabel(label)
+        label = null
         error = true
       } else {
         comment = null

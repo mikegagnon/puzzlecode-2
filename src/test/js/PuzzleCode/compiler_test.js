@@ -228,6 +228,30 @@ var cases = [
 			null,
 			false)
 	},
+	{
+		tokens: ["goto"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.GOTO,
+			null,
+			compiler.Error.GOTO_WITHOUT_LABEL,
+			true)
+	},
+	{
+		tokens: ["goto", "foo", "bar"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.GOTO,
+			null,
+			compiler.Error.MALFORMED_GOTO,
+			true)
+	},
+	{
+		tokens: ["goto", "1x"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.GOTO,
+			null,
+			compiler.Error.gotoWithInvalidLabel("1x"),
+			true)
+	},
 ]
 
 _(cases).forEach(function(tc){

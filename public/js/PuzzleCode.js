@@ -294,7 +294,7 @@ PuzzleCode.compiler = (function(){
       return tokens[0] == "goto"
     })
 
-    var instruction = null
+    var label = null
     var comment = null
     var error = false
 
@@ -305,9 +305,10 @@ PuzzleCode.compiler = (function(){
       comment = compiler.Error.MALFORMED_GOTO
       error = true
     } else {
-      var label = tokens[1]
+      label = tokens[1]
       if (!compiler.isValidLabel(label)) {
         comment = compiler.Error.gotoWithInvalidLabel(label)
+        label = null
         error = true
       } else {
         comment = null
@@ -588,14 +589,7 @@ _(cases).forEach(function(tc){
 
 /******************************************************************************/
 TEST = "PuzzleCode.compiler.isValidLabel"
-/*
-compiler.isValidLabel = function(label) {
-    return label.length > 0 &&
-      label.length < compiler.MAX_TOKEN_LENGTH &&
-      !(label in compiler.RESERVED_WORDS) &&
-      compiler.IDENT_REGEX.test(label)
-  }
-*/
+
 var LONGEST_TOKEN = _(compiler.MAX_TOKEN_LENGTH)
 	.times()
 	.map(function(){return 'x'})
@@ -700,6 +694,30 @@ var cases = [
 			"bar",
 			null,
 			false)
+	},
+	{
+		tokens: ["goto"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.GOTO,
+			null,
+			compiler.Error.GOTO_WITHOUT_LABEL,
+			true)
+	},
+	{
+		tokens: ["goto", "foo", "bar"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.GOTO,
+			null,
+			compiler.Error.MALFORMED_GOTO,
+			true)
+	},
+	{
+		tokens: ["goto", "1x"],
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.GOTO,
+			null,
+			compiler.Error.gotoWithInvalidLabel("1x"),
+			true)
 	},
 ]
 
