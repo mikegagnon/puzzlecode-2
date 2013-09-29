@@ -180,7 +180,7 @@ var cases = [
 		expectedOutput: new compiler.Instruction(
 			compiler.Opcode.TURN,
 			null,
-			compiler.errorTurnWithBadDirection("foo"),
+			compiler.Error.turnWithBadDirection("foo"),
 			true)
 	},
 ]

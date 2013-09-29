@@ -116,6 +116,11 @@ PuzzleCode.compiler = (function(){
     MALFORMED_TURN: new compiler.ErrorMessage(
       "Malformed 'turn' instruction",
       "malformed_turn"),
+    turnWithBadDirection: function(direction) {
+      return new compiler.ErrorMessage(
+        "'" + compiler.trim(direction) + "' is not a valid direction",
+        "turn_with_bad_direction")
+    },
     GOTO_WITHOUT_LABEL: new compiler.ErrorMessage(
       "The 'goto' instruction is missing a label",
       "goto_without_label"
@@ -123,23 +128,12 @@ PuzzleCode.compiler = (function(){
     MALFORMED_GOTO: new compiler.ErrorMessage(
       "Malformed 'goto' instruction",
       "malformed_goto"
-      )
-  }
-
-  /**
-   * Functions for generating specific error messages
-   ****************************************************************************/
-
-  compiler.errorTurnWithBadDirection = function(direction) {
-    return new compiler.ErrorMessage(
-      "'" + compiler.trim(direction) + "' is not a valid direction",
-      "turn_with_bad_direction")
-  }
-
-  compiler.errorGotoWithInvalidLabel = function(label) {
-    return new compiler.ErrorMessage(
-      "'" + compiler.trim(label) + "' is not a valid label",
-      "goto_with_invalid_label")
+      ),
+    gotoWithInvalidLabel: function(label) {
+      return new compiler.ErrorMessage(
+        "'" + compiler.trim(label) + "' is not a valid label",
+        "goto_with_invalid_label")
+    }
   }
 
   /**
@@ -274,7 +268,7 @@ PuzzleCode.compiler = (function(){
       } else if (direction == "right") {
         data = PuzzleCode.direction.RIGHT
       } else {
-        comment = compiler.errorTurnWithBadDirection(direction)
+        comment = compiler.Error.turnWithBadDirection(direction)
         error = true
       }
     }
@@ -302,7 +296,7 @@ PuzzleCode.compiler = (function(){
     } else {
       var label = tokens[1]
       if (!isValidLabel(label)) {
-        comment = compiler.Error.errorGotoWithInvalidLabel(label)
+        comment = compiler.Error.gotoWithInvalidLabel(label)
         error = true
       } else {
         comment = null
@@ -642,7 +636,7 @@ var cases = [
 		expectedOutput: new compiler.Instruction(
 			compiler.Opcode.TURN,
 			null,
-			compiler.errorTurnWithBadDirection("foo"),
+			compiler.Error.turnWithBadDirection("foo"),
 			true)
 	},
 ]
