@@ -38,14 +38,19 @@ PuzzleCode.compiler = (function(){
    * Data structures
    ****************************************************************************/
   compiler.Instruction = function (
-      // value must be in the Opcode enum
+      // value must be either in the compiler.Opcode enum
+      // if opcode == null, then either there was an error compiling the
+      // instruction (see error), or the Instruction is a no-op
       opcode,
       // data object, whose type is determined by opcode
       data,
-      // from program text
+      // null, or an ErrorMessage object describing the error
       comment,
-      error,      
+      // true iff there was an error compiling this instruction
+      error,
+      // null, or a label string for this instruction
       label,
+      // the index of this line (from the array of program lines)
       lineIndex
       ) {
     this.opcode = opcode
@@ -138,6 +143,21 @@ PuzzleCode.compiler = (function(){
       return new compiler.ErrorMessage(
         "'" + compiler.trim(label) + "' is not a valid label",
         "goto_with_invalid_label")
+    },
+    instructionWithInvalidLabel: function(label) {
+      return new compiler.ErrorMessage(
+        "'" + compiler.trim(label) + "' is not a valid label",
+        "instruction_with_invalid_label")
+    },
+    duplicateLabel: function(label) {
+      return new compiler.ErrorMessage(
+        "The label '" + compiler.trim(label) + "' is already defined",
+        "duplicate_label")
+    },
+    invalidOpcode: function(opcode) {
+      return new compiler.ErrorMessage(
+        "'" + opcode + "' is not an instruction",
+        "invalid_opcode")
     }
   }
 
@@ -315,6 +335,62 @@ PuzzleCode.compiler = (function(){
 
     return new compiler.Instruction(compiler.Opcode.GOTO, label, comment, error)
   }
+
+  /**
+   * Returns an Instruction object populated with: opcode, data, comment, error,
+   * label, and lineIndex.
+   *
+   * @param line a string line from a program
+   * @param lineIndex the index of this line (from the array of program lines)
+   * @param labels map from label-string to instruction pointer for that label
+   */
+  function compileLine(line, lineIndex, labels) {
+    
+    var tokens = compiler.tokenize(line)
+    tokens = compiler.removeComment(tokens)
+    var tokensLabel = compiler.removeLabel(tokens)
+    tokens = tokensLabel.tokens
+    var label = tokensLabel.label
+
+    // check for invalid labels
+    if (label != null) {
+      if (!isValidLabel(label)) {
+        var comment = compiler.Error.instructionWithInvalidLabel(label)
+        return new compiler.Instruction(null, null, comment, true, null,
+          lineIndex)
+      } else if (label in labels) {
+        comment = compiler.Error.duplicateLabel(label)
+        return new compiler.Instruction(null, null, comment, true, null,
+          lineIndex)
+      }
+    }
+
+    // if the line is blank
+    if (tokens.length == 0 || (tokens.length == 1 && tokens[0] == "")) {
+      return new compiler.Instruction(null, null, null, false, label,
+          lineIndex)
+    }
+
+    var opcode = tokens[0]
+    var instruction = undefined
+    if (opcode == "move") {
+      instruction = compileMove(tokens)
+    } else if (opcode == "turn") {
+      instruction = compileTurn(tokens)
+    } else if (opcode == "goto") {
+      instruction = compileGoto(tokens)
+    } else {
+      comment = compiler.Error.invalidOpcode(opcode)
+      return new compiler.Instruction(null, null, comment, true, label,
+          lineIndex)
+    }
+    
+    instruction.label = label
+    instruction.lineIndex = lineIndex
+    
+    return instruction
+  }
+
 
   return compiler
 })()
