@@ -178,214 +178,47 @@ TEST = "PuzzleCode.compiler.compileTurn"
 var cases = [
 	{
 		tokens: ["turn", "left"],
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.TURN,
-			PuzzleCode.direction.LEFT,
-			null,
-			false)
+		expectedOutput: {
+			opcode: compiler.Opcode.TURN,
+			data: PuzzleCode.direction.LEFT,
+			error: false,
+		}
 	},
 	{
 		tokens: ["turn", "right"],
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.TURN,
-			PuzzleCode.direction.RIGHT,
-			null,
-			false)
+		expectedOutput: {
+			opcode: compiler.Opcode.TURN,
+			data: PuzzleCode.direction.RIGHT,
+			error: false,
+		}
 	},
 	{
 		tokens: ["turn"],
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.TURN,
-			null,
-			compiler.Error.TURN_WITHOUT_DIRECTION,
-			true)
+		expectedOutput: {
+			opcode: compiler.Opcode.TURN,
+			comment: compiler.Error.TURN_WITHOUT_DIRECTION,
+			error: true,
+		}
 	},
 	{
 		tokens: ["turn", "left", "right"],
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.TURN,
-			null,
-			compiler.Error.MALFORMED_TURN,
-			true)
+		expectedOutput: {
+			opcode: compiler.Opcode.TURN,
+			comment: compiler.Error.MALFORMED_TURN,
+			error: true,
+		}
 	},
 	{
 		tokens: ["turn", "foo"],
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.TURN,
-			null,
-			compiler.Error.turnWithBadDirection("foo"),
-			true)
+		expectedOutput: {
+			opcode: compiler.Opcode.TURN,
+			comment: compiler.Error.turnWithBadDirection("foo"),
+			error: true,
+		}
 	},
 ]
 
 _(cases).forEach(function(tc){
 	tc.output = compiler.compileTurn(tc.tokens)
-	test(tc, _.isEqual(tc.output, tc.expectedOutput))
-})
-
-/******************************************************************************/
-TEST = "PuzzleCode.compiler.compileGoto"
-var cases = [
-	{
-		tokens: ["goto", "bar"],
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.GOTO,
-			"bar",
-			null,
-			false)
-	},
-	{
-		tokens: ["goto"],
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.GOTO,
-			null,
-			compiler.Error.GOTO_WITHOUT_LABEL,
-			true)
-	},
-	{
-		tokens: ["goto", "foo", "bar"],
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.GOTO,
-			null,
-			compiler.Error.MALFORMED_GOTO,
-			true)
-	},
-	{
-		tokens: ["goto", "1x"],
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.GOTO,
-			null,
-			compiler.Error.gotoWithInvalidLabel("1x"),
-			true)
-	},
-]
-
-_(cases).forEach(function(tc){
-	tc.output = compiler.compileGoto(tc.tokens)
-	test(tc, _.isEqual(tc.output, tc.expectedOutput))
-})
-
-/******************************************************************************/
-TEST = "PuzzleCode.compiler.compileLine"
-var moveInstr = new compiler.Instruction(
-	compiler.Opcode.MOVE,
-	null,
-	null,
-	false,
-	null,
-	1)
-var cases = [
-	{
-		line: "move",
-		lineIndex: 1,
-		labels: {},
-		expectedOutput: moveInstr
-	},
-	{
-		line: "  move  // foo bar baz",
-		lineIndex: 1,
-		labels: {},
-		expectedOutput: moveInstr
-	},
-	{
-		line: "foo:  move  // foo bar baz",
-		lineIndex: 1,
-		labels: {},
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.MOVE,
-			null,
-			null,
-			false,
-			"foo",
-			1)
-	},
-	{
-		line: "goto:  move  // foo bar baz",
-		lineIndex: 1,
-		labels: {},
-		expectedOutput: new compiler.Instruction(
-			null,
-			null,
-			compiler.Error.instructionWithInvalidLabel("goto"),
-			true,
-			null,
-			1)
-	},
-	{
-		line: "foo: move",
-		lineIndex: 1,
-		labels: {"foo": 0},
-		expectedOutput: new compiler.Instruction(
-			null,
-			null,
-			compiler.Error.duplicateLabel("foo"),
-			true,
-			null,
-			1)
-	},
-	{
-		line: "    ",
-		lineIndex: 1,
-		labels: {},
-		expectedOutput: new compiler.Instruction(
-			null,
-			null,
-			null,
-			false,
-			null,
-			1)
-	},
-	{
-		line: "  foo:  ",
-		lineIndex: 1,
-		labels: {},
-		expectedOutput: new compiler.Instruction(
-			null,
-			null,
-			null,
-			false,
-			"foo",
-			1)
-	},
-	{
-		line: "xyz left",
-		lineIndex: 1,
-		labels: {},
-		expectedOutput: new compiler.Instruction(
-			null,
-			null,
-			compiler.Error.invalidOpcode("xyz"),
-			true,
-			null,
-			1)
-	},
-	{
-		line: "turn left",
-		lineIndex: 1,
-		labels: {},
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.TURN,
-			PuzzleCode.direction.LEFT,
-			null,
-			false,
-			null,
-			1)
-	},
-	{
-		line: "goto foo",
-		lineIndex: 1,
-		labels: {},
-		expectedOutput: new compiler.Instruction(
-			compiler.Opcode.GOTO,
-			"foo",
-			null,
-			false,
-			null,
-			1)
-	},
-]
-
-_(cases).forEach(function(tc){
-	tc.output = compiler.compileLine(tc.line, tc.lineIndex, tc.labels)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })

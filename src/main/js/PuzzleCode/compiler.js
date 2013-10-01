@@ -278,7 +278,7 @@ PuzzleCode.compiler = (function(){
     var instruction = {
       opcode: compiler.Opcode.MOVE,
       error: false
-    } 
+    }
 
     if (tokens.length != 1) {
       instruction.error = true
@@ -295,29 +295,31 @@ PuzzleCode.compiler = (function(){
       return tokens[0] == "turn"
     })
 
-    var comment = null
-    var error = false
-    var data = null
+    var instruction = {
+      opcode: compiler.Opcode.TURN,
+      error: false
+    }
+
 
     if (tokens.length == 1) {
-      comment = compiler.Error.TURN_WITHOUT_DIRECTION
-      error = true
+      instruction.comment = compiler.Error.TURN_WITHOUT_DIRECTION
+      instruction.error = true
     } else if (tokens.length > 2) {
-      comment = compiler.Error.MALFORMED_TURN
-      error = true
+      instruction.comment = compiler.Error.MALFORMED_TURN
+      instruction.error = true
     } else {
       var direction = tokens[1]
       if (direction == "left") {
-        data = PuzzleCode.direction.LEFT
+        instruction.data = PuzzleCode.direction.LEFT
       } else if (direction == "right") {
-        data = PuzzleCode.direction.RIGHT
+        instruction.data = PuzzleCode.direction.RIGHT
       } else {
-        comment = compiler.Error.turnWithBadDirection(direction)
-        error = true
+        instruction.comment = compiler.Error.turnWithBadDirection(direction)
+        instruction.error = true
       }
     }
 
-    return new compiler.Instruction(compiler.Opcode.TURN, data, comment, error)
+    return instruction
   }
 
   // Returns an Instruction object populated with: opcode, data, comment, error
