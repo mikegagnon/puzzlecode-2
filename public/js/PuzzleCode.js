@@ -437,7 +437,6 @@ PuzzleCode.compiler = (function(){
       error: false
     }
 
-
     if (tokens.length == 1) {
       instruction.comment = compiler.Error.TURN_WITHOUT_DIRECTION
       instruction.error = true
@@ -466,26 +465,28 @@ PuzzleCode.compiler = (function(){
       return tokens[0] == "goto"
     })
 
-    var label = null
-    var comment = null
-    var error = false
+    var instruction = {
+      opcode: compiler.Opcode.GOTO,
+      error: false
+    }
 
     if (tokens.length == 1) {
-      comment = compiler.Error.GOTO_WITHOUT_LABEL
-      error = true
+      instruction.comment = compiler.Error.GOTO_WITHOUT_LABEL
+      instruction.error = true
     } else if (tokens.length > 2) {
-      comment = compiler.Error.MALFORMED_GOTO
-      error = true
+      instruction.comment = compiler.Error.MALFORMED_GOTO
+      instruction.error = true
     } else {
       label = tokens[1]
-      if (!compiler.isValidLabel(label)) {
-        comment = compiler.Error.gotoWithInvalidLabel(label)
-        label = null
-        error = true
+      if (compiler.isValidLabel(label)) {
+        instruction.data = label
+      } else {
+        instruction.comment = compiler.Error.gotoWithInvalidLabel(label)
+        instruction.error = true
       }
     }
 
-    return new compiler.Instruction(compiler.Opcode.GOTO, label, comment, error)
+    return instruction
   }
 
   /**
@@ -909,5 +910,49 @@ var cases = [
 
 _(cases).forEach(function(tc){
 	tc.output = compiler.compileTurn(tc.tokens)
+	test(tc, tv4.validate(tc.output, compiler.InstructionSchema))
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compileGoto"
+var cases = [
+	{
+		tokens: ["goto", "bar"],
+		expectedOutput: {
+			opcode: compiler.Opcode.GOTO,
+			data: "bar",
+			error: false,
+		}
+	},
+	{
+		tokens: ["goto"],
+		expectedOutput: {
+			opcode: compiler.Opcode.GOTO,
+			comment: compiler.Error.GOTO_WITHOUT_LABEL,
+			error: true,
+		}
+	},
+	{
+		tokens: ["goto", "foo", "bar"],
+		expectedOutput: {
+			opcode: compiler.Opcode.GOTO,
+			comment: compiler.Error.MALFORMED_GOTO,
+			error: true,
+		}
+	},
+	{
+		tokens: ["goto", "1x"],
+		expectedOutput: {
+			opcode: compiler.Opcode.GOTO,
+			comment: compiler.Error.gotoWithInvalidLabel("1x"),
+			error: true,
+		}
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compileGoto(tc.tokens)
+	test(tc, tv4.validate(tc.output, compiler.InstructionSchema))
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })

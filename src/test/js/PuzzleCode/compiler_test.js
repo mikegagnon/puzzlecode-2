@@ -220,5 +220,49 @@ var cases = [
 
 _(cases).forEach(function(tc){
 	tc.output = compiler.compileTurn(tc.tokens)
+	test(tc, tv4.validate(tc.output, compiler.InstructionSchema))
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compileGoto"
+var cases = [
+	{
+		tokens: ["goto", "bar"],
+		expectedOutput: {
+			opcode: compiler.Opcode.GOTO,
+			data: "bar",
+			error: false,
+		}
+	},
+	{
+		tokens: ["goto"],
+		expectedOutput: {
+			opcode: compiler.Opcode.GOTO,
+			comment: compiler.Error.GOTO_WITHOUT_LABEL,
+			error: true,
+		}
+	},
+	{
+		tokens: ["goto", "foo", "bar"],
+		expectedOutput: {
+			opcode: compiler.Opcode.GOTO,
+			comment: compiler.Error.MALFORMED_GOTO,
+			error: true,
+		}
+	},
+	{
+		tokens: ["goto", "1x"],
+		expectedOutput: {
+			opcode: compiler.Opcode.GOTO,
+			comment: compiler.Error.gotoWithInvalidLabel("1x"),
+			error: true,
+		}
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compileGoto(tc.tokens)
+	test(tc, tv4.validate(tc.output, compiler.InstructionSchema))
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
