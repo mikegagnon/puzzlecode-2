@@ -15,3 +15,4 @@
  */
 
  PuzzleCode.HELP_URL = "http://puzzlecode.org/help/"
+ PuzzleCode.JSON_SCHEMA = "http://json-schema.org/draft-04/schema#"

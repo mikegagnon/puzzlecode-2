@@ -164,6 +164,7 @@ var cases = [
 
 _(cases).forEach(function(tc){
 	tc.output = compiler.compileMove(tc.tokens)
+	test(tc, tv4.validate(tc.output, compiler.InstructionSchema))
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
 

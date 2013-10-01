@@ -18,6 +18,82 @@ PuzzleCode.compiler = (function(){
   var compiler = {};
 
   /**
+   * Constants
+   ****************************************************************************/
+  compiler.Opcode = {
+    MOVE: 0,
+    TURN: 1,
+    GOTO: 2
+  }
+
+  // map of reserved words
+  compiler.RESERVED_WORDS = {
+    "move": true,
+    "turn": true,
+    "left": true,
+    "right": true,
+    "goto": true
+  }
+
+  compiler.MAX_TOKEN_LENGTH = 5,
+
+  // regex for identifiers
+  compiler.IDENT_REGEX = /^[A-Za-z][A-Za-z0-9_]*$/
+
+  /**
+   * Schemas for JSON objects
+   ****************************************************************************/
+
+  /**
+   * A Comment object represents a compiler-generated comment for an
+   * instruction --- most commonly error messages. 
+   */
+  compiler.CommentSchema = {
+    "$schema":  PuzzleCode.JSON_SCHEMA,
+    "type": "object",
+    "properties": {
+
+        // The message for the comment
+        "message": { "type": "string" },
+
+        // If the message should be hyperlinked, the urlKeyword specifies
+        // the "keyword" part of the hyperlink
+        "urlKeyword": { "type": "string" },
+    },
+    "required": ["message"]
+  }
+
+  // Instruction objects
+  compiler.InstructionSchema = {
+    "$schema":  PuzzleCode.JSON_SCHEMA,
+    "type": "object",
+    "properties": {
+
+        // opcode must be either absent or a value from the Opcode enum
+        // if opcode is absent, then it represents a NOOP
+        "opcode": {"enum": _.values(compiler.Opcode) },
+
+        // Some instructions have data associated with the opcode.
+        // For example, the TURN instruction has the turn-direction as the data.
+        // The interpretation of data depends on opcode.
+        "data": {},
+
+        // A compilter-generated comment associated with the instruction
+        "comment": compiler.CommentSchema,
+
+        // true iff there was an error compiling the instruction
+        "error": {"type": "boolean"},
+
+        // the label for this instruction
+        "label": {"type": "string"},
+
+        // the index of the line from the program text
+        "lineIndex": {"type": "integer"},
+    },
+    "required": ["error"]
+  }
+
+  /**
    * Data structures
    ****************************************************************************/
   compiler.Instruction = function (
@@ -72,29 +148,6 @@ PuzzleCode.compiler = (function(){
     this.message = message
     this.urlKeyword = urlKeyword
   }
-
-  /**
-   * Constants
-   ****************************************************************************/
-  compiler.Opcode = {
-    MOVE: 0,
-    TURN: 1,
-    GOTO: 2
-  }
-
-  // map of reserved words
-  compiler.RESERVED_WORDS = {
-    "move": true,
-    "turn": true,
-    "left": true,
-    "right": true,
-    "goto": true
-  }
-
-  compiler.MAX_TOKEN_LENGTH = 5,
-
-  // regex for identifiers
-  compiler.IDENT_REGEX = /^[A-Za-z][A-Za-z0-9_]*$/
 
   /**
    * Compilation errors
