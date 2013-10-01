@@ -151,14 +151,19 @@ _(cases).forEach(function(tc){
 TEST = "PuzzleCode.compiler.compileMove"
 var cases = [
 	{
-		tokens: 				["move"],
-		expectedOutput: new compiler.Instruction(compiler.Opcode.MOVE, null, null,
-			false)
+		tokens: ["move"],
+		expectedOutput: {
+			opcode: compiler.Opcode.MOVE,
+			error: false
+		}
 	},
 	{
-		tokens: 				["move", "foo"],
-		expectedOutput: new compiler.Instruction(compiler.Opcode.MOVE, null,
-			compiler.Error.MALFORMED_MOVE, true)
+		tokens: ["move", "foo"],
+		expectedOutput: {
+			opcode: compiler.Opcode.MOVE,
+			error: true,
+			comment: compiler.Error.MALFORMED_MOVE
+		}
 	},
 ]
 

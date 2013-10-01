@@ -233,29 +233,6 @@ PuzzleCode.compiler = (function(){
   /**
    * Data structures
    ****************************************************************************/
-  compiler.Instruction = function (
-      // value must be either in the compiler.Opcode enum
-      // if opcode == null, then either there was an error compiling the
-      // instruction (see error), or the Instruction is a no-op
-      opcode,
-      // data object, whose type is determined by opcode
-      data,
-      // null, or an ErrorMessage object describing the error
-      comment,
-      // true iff there was an error compiling this instruction
-      error,
-      // null, or a label string for this instruction
-      label,
-      // the index of this line (from the array of program lines)
-      lineIndex
-      ) {
-    this.opcode = opcode
-    this.data = data
-    this.comment = comment
-    this.error = error
-    this.label = label
-    this.lineIndex = lineIndex
-  }
 
   compiler.Program = function(
       // string
@@ -290,9 +267,10 @@ PuzzleCode.compiler = (function(){
    * Compilation errors
    ****************************************************************************/
   compiler.Error = {
-    MALFORMED_MOVE: new compiler.ErrorMessage(
-      "Malformed 'move' instruction",
-      "malformed_move"),
+    MALFORMED_MOVE: {
+      message:    "Malformed 'move' instruction",
+      urlKeyword: "malformed_move"
+    },
     TURN_WITHOUT_DIRECTION: new compiler.ErrorMessage(
       "The 'turn' instruction is missing a direction",
       "turn_without_direction"),
@@ -434,18 +412,17 @@ PuzzleCode.compiler = (function(){
       return tokens[0] == "move"
     })
 
-    var instruction = null
-    var comment = null
-    var error = false
+    var instruction = {
+      opcode: compiler.Opcode.MOVE,
+      error: false
+    } 
 
-    if (tokens.length == 1) {
-      comment = null
-    } else {
-      error = true
-      comment = compiler.Error.MALFORMED_MOVE
+    if (tokens.length != 1) {
+      instruction.error = true
+      instruction.comment = compiler.Error.MALFORMED_MOVE
     }
 
-    return new compiler.Instruction(compiler.Opcode.MOVE, null, comment, error)
+    return instruction
   }
 
   // Returns an Instruction object populated with: opcode, data, comment, error
@@ -861,14 +838,19 @@ _(cases).forEach(function(tc){
 TEST = "PuzzleCode.compiler.compileMove"
 var cases = [
 	{
-		tokens: 				["move"],
-		expectedOutput: new compiler.Instruction(compiler.Opcode.MOVE, null, null,
-			false)
+		tokens: ["move"],
+		expectedOutput: {
+			opcode: compiler.Opcode.MOVE,
+			error: false
+		}
 	},
 	{
-		tokens: 				["move", "foo"],
-		expectedOutput: new compiler.Instruction(compiler.Opcode.MOVE, null,
-			compiler.Error.MALFORMED_MOVE, true)
+		tokens: ["move", "foo"],
+		expectedOutput: {
+			opcode: compiler.Opcode.MOVE,
+			error: true,
+			comment: compiler.Error.MALFORMED_MOVE
+		}
 	},
 ]
 
