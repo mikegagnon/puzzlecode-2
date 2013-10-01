@@ -344,7 +344,7 @@ PuzzleCode.compiler = (function(){
    * @param lineIndex the index of this line (from the array of program lines)
    * @param labels map from label-string to instruction pointer for that label
    */
-  function compileLine(line, lineIndex, labels) {
+  compiler.compileLine = function(line, lineIndex, labels) {
     
     var tokens = compiler.tokenize(line)
     tokens = compiler.removeComment(tokens)
@@ -354,12 +354,12 @@ PuzzleCode.compiler = (function(){
 
     // check for invalid labels
     if (label != null) {
-      if (!isValidLabel(label)) {
+      if (!compiler.isValidLabel(label)) {
         var comment = compiler.Error.instructionWithInvalidLabel(label)
         return new compiler.Instruction(null, null, comment, true, null,
           lineIndex)
       } else if (label in labels) {
-        comment = compiler.Error.duplicateLabel(label)
+        var comment = compiler.Error.duplicateLabel(label)
         return new compiler.Instruction(null, null, comment, true, null,
           lineIndex)
       }
@@ -374,11 +374,11 @@ PuzzleCode.compiler = (function(){
     var opcode = tokens[0]
     var instruction = undefined
     if (opcode == "move") {
-      instruction = compileMove(tokens)
+      instruction = compiler.compileMove(tokens)
     } else if (opcode == "turn") {
-      instruction = compileTurn(tokens)
+      instruction = compiler.compileTurn(tokens)
     } else if (opcode == "goto") {
-      instruction = compileGoto(tokens)
+      instruction = compiler.compileGoto(tokens)
     } else {
       comment = compiler.Error.invalidOpcode(opcode)
       return new compiler.Instruction(null, null, comment, true, label,
@@ -390,7 +390,6 @@ PuzzleCode.compiler = (function(){
     
     return instruction
   }
-
 
   return compiler
 })()
@@ -796,6 +795,131 @@ var cases = [
 
 _(cases).forEach(function(tc){
 	tc.output = compiler.compileGoto(tc.tokens)
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compileLine"
+var moveInstr = new compiler.Instruction(
+	compiler.Opcode.MOVE,
+	null,
+	null,
+	false,
+	null,
+	1)
+var cases = [
+	{
+		line: "move",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: moveInstr
+	},
+	{
+		line: "  move  // foo bar baz",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: moveInstr
+	},
+	{
+		line: "foo:  move  // foo bar baz",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.MOVE,
+			null,
+			null,
+			false,
+			"foo",
+			1)
+	},
+	{
+		line: "goto:  move  // foo bar baz",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: new compiler.Instruction(
+			null,
+			null,
+			compiler.Error.instructionWithInvalidLabel("goto"),
+			true,
+			null,
+			1)
+	},
+	{
+		line: "foo: move",
+		lineIndex: 1,
+		labels: {"foo": 0},
+		expectedOutput: new compiler.Instruction(
+			null,
+			null,
+			compiler.Error.duplicateLabel("foo"),
+			true,
+			null,
+			1)
+	},
+	{
+		line: "    ",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: new compiler.Instruction(
+			null,
+			null,
+			null,
+			false,
+			null,
+			1)
+	},
+	{
+		line: "  foo:  ",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: new compiler.Instruction(
+			null,
+			null,
+			null,
+			false,
+			"foo",
+			1)
+	},
+	{
+		line: "xyz left",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: new compiler.Instruction(
+			null,
+			null,
+			compiler.Error.invalidOpcode("xyz"),
+			true,
+			null,
+			1)
+	},
+	{
+		line: "turn left",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.TURN,
+			PuzzleCode.direction.LEFT,
+			null,
+			false,
+			null,
+			1)
+	},
+	{
+		line: "goto foo",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: new compiler.Instruction(
+			compiler.Opcode.GOTO,
+			"foo",
+			null,
+			false,
+			null,
+			1)
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compileLine(tc.line, tc.lineIndex, tc.labels)
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
 /**

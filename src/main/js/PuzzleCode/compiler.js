@@ -327,7 +327,7 @@ PuzzleCode.compiler = (function(){
    * @param lineIndex the index of this line (from the array of program lines)
    * @param labels map from label-string to instruction pointer for that label
    */
-  function compileLine(line, lineIndex, labels) {
+  compiler.compileLine = function(line, lineIndex, labels) {
     
     var tokens = compiler.tokenize(line)
     tokens = compiler.removeComment(tokens)
@@ -337,12 +337,12 @@ PuzzleCode.compiler = (function(){
 
     // check for invalid labels
     if (label != null) {
-      if (!isValidLabel(label)) {
+      if (!compiler.isValidLabel(label)) {
         var comment = compiler.Error.instructionWithInvalidLabel(label)
         return new compiler.Instruction(null, null, comment, true, null,
           lineIndex)
       } else if (label in labels) {
-        comment = compiler.Error.duplicateLabel(label)
+        var comment = compiler.Error.duplicateLabel(label)
         return new compiler.Instruction(null, null, comment, true, null,
           lineIndex)
       }
@@ -357,11 +357,11 @@ PuzzleCode.compiler = (function(){
     var opcode = tokens[0]
     var instruction = undefined
     if (opcode == "move") {
-      instruction = compileMove(tokens)
+      instruction = compiler.compileMove(tokens)
     } else if (opcode == "turn") {
-      instruction = compileTurn(tokens)
+      instruction = compiler.compileTurn(tokens)
     } else if (opcode == "goto") {
-      instruction = compileGoto(tokens)
+      instruction = compiler.compileGoto(tokens)
     } else {
       comment = compiler.Error.invalidOpcode(opcode)
       return new compiler.Instruction(null, null, comment, true, label,
