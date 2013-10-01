@@ -266,3 +266,99 @@ _(cases).forEach(function(tc){
 	test(tc, tv4.validate(tc.output, compiler.InstructionSchema))
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compileLine"
+var cases = [
+	{
+		line: "move",
+		labels: {},
+		expectedOutput: {
+			opcode: compiler.Opcode.MOVE,
+			error: false,
+		}
+	},
+	{
+		line: "  move  // foo bar baz",
+		labels: {},
+		expectedOutput: {
+			opcode: compiler.Opcode.MOVE,
+			error: false,
+		}
+	},
+	{
+		line: "foo:  move  // foo bar baz",
+		labels: {},
+		expectedOutput: {
+			opcode: compiler.Opcode.MOVE,
+			error: false,
+			label: "foo"
+		}
+	},
+	{
+		line: "goto:  move  // foo bar baz",
+		labels: {},
+		expectedOutput: {
+			error: true,
+			comment: compiler.Error.instructionWithInvalidLabel("goto")
+		}
+	},
+	{
+		line: "foo: move",
+		labels: {"foo": 0},
+		expectedOutput: {
+			error: true,
+			comment: compiler.Error.duplicateLabel("foo")
+		}
+	},
+	{
+		line: "    ",
+		labels: {},
+		expectedOutput: {
+			error: false,
+		}
+	},
+	{
+		line: "  foo:  ",
+		labels: {},
+		expectedOutput: {
+			error: false,
+			label: "foo"
+		}
+	},
+	{
+		line: "xyz left",
+		labels: {},
+		expectedOutput: {
+			error: true,
+			comment: compiler.Error.invalidOpcode("xyz")
+		}
+	},
+	{
+		line: "turn left",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: {
+			opcode: compiler.Opcode.TURN,
+			data: PuzzleCode.direction.LEFT,
+			error: false,
+		}
+	},
+	{
+		line: "bar: goto foo",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: {
+			opcode: compiler.Opcode.GOTO,
+			data: "foo",
+			label: "bar",
+			error: false,
+		}
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compileLine(tc.line, tc.labels)
+	test(tc, tv4.validate(tc.output, compiler.InstructionSchema))
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})

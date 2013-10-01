@@ -405,7 +405,7 @@ PuzzleCode.compiler = (function(){
    * Functions for compiling specific instructions
    ****************************************************************************/
 
-  // Returns an Instruction object populated with: opcode, data, comment, error 
+  // Returns an Instruction object
   compiler.compileMove = function(tokens) {
 
     PuzzleCode.assert("tokens[0] must == 'move'", function(){
@@ -425,7 +425,7 @@ PuzzleCode.compiler = (function(){
     return instruction
   }
 
-  // Returns an Instruction object populated with: opcode, data, comment, error
+  // Returns an Instruction object
   compiler.compileTurn = function(tokens) {
 
     PuzzleCode.assert("tokens[0] must == 'turn'", function(){
@@ -458,7 +458,7 @@ PuzzleCode.compiler = (function(){
     return instruction
   }
 
-  // Returns an Instruction object populated with: opcode, data, comment, error
+  // Returns an Instruction object
   compiler.compileGoto = function(tokens) {
 
     PuzzleCode.assert("tokens[0] must == 'goto'", function(){
@@ -490,14 +490,12 @@ PuzzleCode.compiler = (function(){
   }
 
   /**
-   * Returns an Instruction object populated with: opcode, data, comment, error,
-   * label, and lineIndex.
+   * Returns an Instruction object.
    *
    * @param line a string line from a program
-   * @param lineIndex the index of this line (from the array of program lines)
    * @param labels map from label-string to instruction pointer for that label
    */
-  compiler.compileLine = function(line, lineIndex, labels) {
+  compiler.compileLine = function(line, labels) {
     
     var tokens = compiler.tokenize(line)
     tokens = compiler.removeComment(tokens)
@@ -505,41 +503,43 @@ PuzzleCode.compiler = (function(){
     tokens = tokensLabel.tokens
     var label = tokensLabel.label
 
+    var instruction = {
+      error: false
+    } 
+
     // check for invalid labels
     if (label != null) {
       if (!compiler.isValidLabel(label)) {
-        var comment = compiler.Error.instructionWithInvalidLabel(label)
-        return new compiler.Instruction(null, null, comment, true, null,
-          lineIndex)
+        return {
+          comment: compiler.Error.instructionWithInvalidLabel(label),
+          error: true
+        }
       } else if (label in labels) {
-        var comment = compiler.Error.duplicateLabel(label)
-        return new compiler.Instruction(null, null, comment, true, null,
-          lineIndex)
+        return {
+          comment: compiler.Error.duplicateLabel(label),
+          error: true
+        }
+      } else {
+        instruction.label = label
       }
     }
 
     // if the line is blank
     if (tokens.length == 0 || (tokens.length == 1 && tokens[0] == "")) {
-      return new compiler.Instruction(null, null, null, false, label,
-          lineIndex)
+      return instruction
     }
 
     var opcode = tokens[0]
-    var instruction = undefined
     if (opcode == "move") {
-      instruction = compiler.compileMove(tokens)
+      instruction = _.merge(instruction, compiler.compileMove(tokens))
     } else if (opcode == "turn") {
-      instruction = compiler.compileTurn(tokens)
+      instruction = _.merge(instruction, compiler.compileTurn(tokens))
     } else if (opcode == "goto") {
-      instruction = compiler.compileGoto(tokens)
+      instruction = _.merge(instruction, compiler.compileGoto(tokens))
     } else {
-      comment = compiler.Error.invalidOpcode(opcode)
-      return new compiler.Instruction(null, null, comment, true, label,
-          lineIndex)
+      instruction.comment = compiler.Error.invalidOpcode(opcode)
+      instruction.error = true
     }
-    
-    instruction.label = label
-    instruction.lineIndex = lineIndex
     
     return instruction
   }
@@ -953,6 +953,102 @@ var cases = [
 
 _(cases).forEach(function(tc){
 	tc.output = compiler.compileGoto(tc.tokens)
+	test(tc, tv4.validate(tc.output, compiler.InstructionSchema))
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compileLine"
+var cases = [
+	{
+		line: "move",
+		labels: {},
+		expectedOutput: {
+			opcode: compiler.Opcode.MOVE,
+			error: false,
+		}
+	},
+	{
+		line: "  move  // foo bar baz",
+		labels: {},
+		expectedOutput: {
+			opcode: compiler.Opcode.MOVE,
+			error: false,
+		}
+	},
+	{
+		line: "foo:  move  // foo bar baz",
+		labels: {},
+		expectedOutput: {
+			opcode: compiler.Opcode.MOVE,
+			error: false,
+			label: "foo"
+		}
+	},
+	{
+		line: "goto:  move  // foo bar baz",
+		labels: {},
+		expectedOutput: {
+			error: true,
+			comment: compiler.Error.instructionWithInvalidLabel("goto")
+		}
+	},
+	{
+		line: "foo: move",
+		labels: {"foo": 0},
+		expectedOutput: {
+			error: true,
+			comment: compiler.Error.duplicateLabel("foo")
+		}
+	},
+	{
+		line: "    ",
+		labels: {},
+		expectedOutput: {
+			error: false,
+		}
+	},
+	{
+		line: "  foo:  ",
+		labels: {},
+		expectedOutput: {
+			error: false,
+			label: "foo"
+		}
+	},
+	{
+		line: "xyz left",
+		labels: {},
+		expectedOutput: {
+			error: true,
+			comment: compiler.Error.invalidOpcode("xyz")
+		}
+	},
+	{
+		line: "turn left",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: {
+			opcode: compiler.Opcode.TURN,
+			data: PuzzleCode.direction.LEFT,
+			error: false,
+		}
+	},
+	{
+		line: "bar: goto foo",
+		lineIndex: 1,
+		labels: {},
+		expectedOutput: {
+			opcode: compiler.Opcode.GOTO,
+			data: "foo",
+			label: "bar",
+			error: false,
+		}
+	},
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compileLine(tc.line, tc.labels)
 	test(tc, tv4.validate(tc.output, compiler.InstructionSchema))
 	test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
