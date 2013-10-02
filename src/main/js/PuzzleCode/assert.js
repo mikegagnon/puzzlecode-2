@@ -14,4 +14,9 @@
  * limitations under the License.
  */
 
-var PuzzleCode = {}
+PuzzleCode.assert = function(message, func) {
+  if (PuzzleCode.Debug && !func()) {
+    alert(message)
+    console.error(message)
+  }
+}
