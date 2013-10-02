@@ -112,13 +112,6 @@ PuzzleCode.compiler = (function(){
     this.constraintViolation = constraintViolation
   }
 
-  compiler.ErrorMessage = function(
-      message,
-      urlKeyword) {
-    this.message = message
-    this.urlKeyword = urlKeyword
-  }
-
   /**
    * Compilation errors
    ****************************************************************************/
@@ -127,44 +120,51 @@ PuzzleCode.compiler = (function(){
       message:    "Malformed 'move' instruction",
       urlKeyword: "malformed_move"
     },
-    TURN_WITHOUT_DIRECTION: new compiler.ErrorMessage(
-      "The 'turn' instruction is missing a direction",
-      "turn_without_direction"),
-    MALFORMED_TURN: new compiler.ErrorMessage(
-      "Malformed 'turn' instruction",
-      "malformed_turn"),
-    turnWithBadDirection: function(direction) {
-      return new compiler.ErrorMessage(
-        "'" + compiler.trim(direction) + "' is not a valid direction",
-        "turn_with_bad_direction")
+    TURN_WITHOUT_DIRECTION: {
+      message: "The 'turn' instruction is missing a direction",
+      urlKeyword: "turn_without_direction"
     },
-    GOTO_WITHOUT_LABEL: new compiler.ErrorMessage(
-      "The 'goto' instruction is missing a label",
-      "goto_without_label"
-      ),
-    MALFORMED_GOTO: new compiler.ErrorMessage(
-      "Malformed 'goto' instruction",
-      "malformed_goto"
-      ),
+    MALFORMED_TURN: {
+      message: "Malformed 'turn' instruction",
+      urlKeyword: "malformed_turn"
+    },
+    turnWithBadDirection: function(direction) {
+      return {
+        message: "'" + compiler.trim(direction) + "' is not a valid direction",
+        urlKeyword: "turn_with_bad_direction"
+      }
+    },
+    GOTO_WITHOUT_LABEL: {
+      message: "The 'goto' instruction is missing a label",
+      urlKeyword: "goto_without_label"
+    },
+    MALFORMED_GOTO: {
+      message: "Malformed 'goto' instruction",
+      urlKeyword: "malformed_goto"
+    },
     gotoWithInvalidLabel: function(label) {
-      return new compiler.ErrorMessage(
-        "'" + compiler.trim(label) + "' is not a valid label",
-        "goto_with_invalid_label")
+      return {
+        message: "'" + compiler.trim(label) + "' is not a valid label",
+        urlKeyword: "goto_with_invalid_label"
+      }
     },
     instructionWithInvalidLabel: function(label) {
-      return new compiler.ErrorMessage(
-        "'" + compiler.trim(label) + "' is not a valid label",
-        "instruction_with_invalid_label")
+      return {
+        message: "'" + compiler.trim(label) + "' is not a valid label",
+        urlKeyword: "instruction_with_invalid_label"
+      }
     },
     duplicateLabel: function(label) {
-      return new compiler.ErrorMessage(
-        "The label '" + compiler.trim(label) + "' is already defined",
-        "duplicate_label")
+      return {
+        message: "The label '" + compiler.trim(label) + "' is already defined",
+        urlKeyword: "duplicate_label"
+      }
     },
     invalidOpcode: function(opcode) {
-      return new compiler.ErrorMessage(
-        "'" + opcode + "' is not an instruction",
-        "invalid_opcode")
+      return {
+        message: "'" + compiler.trim(opcode) + "' is not an instruction",
+        urlKeyword: "invalid_opcode"
+      }
     }
   }
 
