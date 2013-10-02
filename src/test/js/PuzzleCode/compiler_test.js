@@ -86,32 +86,49 @@ _(cases).forEach(function(tc){
 TEST = "PuzzleCode.compiler.removeLabel"
 var cases = [
 	{
-		tokens: 				[],
-		expectedOutput: new compiler.TokensLabel([], null)
+		tokens: [],
+		expectedOutput: {
+			tokens: []
+		}
 	},
 	{
-		tokens: 				["1"],
-		expectedOutput: new compiler.TokensLabel(["1"], null)
+		tokens: ["1"],
+		expectedOutput: {
+			tokens: ["1"]
+		}
 	},
 	{
-		tokens: 				["a:"],
-		expectedOutput: new compiler.TokensLabel([], "a")
+		tokens: ["a:"],
+		expectedOutput: {
+			tokens: [],
+			label: "a"
+		}
 	},
 	{
-		tokens: 				["1", "2", "3"],
-		expectedOutput: new compiler.TokensLabel(["1", "2", "3"], null)
+		tokens: ["1", "2", "3"],
+		expectedOutput: {
+			tokens: ["1", "2", "3"]
+		}
 	},
 	{
-		tokens: 				["a:", "1", "2", "3"],
-		expectedOutput: new compiler.TokensLabel(["1", "2", "3"], "a")
+		tokens: ["a:", "1", "2", "3"],
+		expectedOutput: {
+			tokens: ["1", "2", "3"],
+			label: "a"
+		}
 	},
 	{
-		tokens: 				["a:1", "2", "3"],
-		expectedOutput: new compiler.TokensLabel(["1", "2", "3"], "a")
+		tokens: ["a:1", "2", "3"],
+		expectedOutput: {
+			tokens: ["1", "2", "3"],
+			label: "a"
+		}
 	},
 	{
-		tokens: 				[":", "2", "3"],
-		expectedOutput: new compiler.TokensLabel([":", "2", "3"], null)
+		tokens: [":", "2", "3"],
+		expectedOutput: {
+			tokens: [":", "2", "3"],
+		}
 	},
 ]
 

@@ -112,13 +112,6 @@ PuzzleCode.compiler = (function(){
     this.constraintViolation = constraintViolation
   }
 
-  compiler.TokensLabel = function(
-      tokens,
-      label) {
-    this.tokens = tokens
-    this.label = label
-  }
-
   compiler.ErrorMessage = function(
       message,
       urlKeyword) {
@@ -231,35 +224,38 @@ PuzzleCode.compiler = (function(){
   }
 
   /**
-   * If tokens contains a label, then returns:
-   *  TokensLabel(tokens but without the label, label)
-   * Otherwise returns:
-   *  TokensLabel(tokens, null)
+   * If tokens contains a label, then returns: {
+   *     tokens: [tokens but without the label],
+   *     label: [the label extracted from tokens]
+   *   }
+   * Otherwise returns: {tokens: [original tokens] }
    */
   compiler.removeLabel = function(tokens) {
     if (tokens.length == 0) {
-      return new compiler.TokensLabel(tokens, null)
+      return {tokens: tokens}
     } else {
       var head = tokens[0]
       var colonIndex = head.indexOf(":")
 
       // if no colon in head
       if (colonIndex <= 0) {
-        return new compiler.TokensLabel(tokens, null)
+        return {tokens: tokens}
       }
       // if head contains only a label
       else if (colonIndex == head.length - 1) {
-        var label = head.substr(0, head.length - 1)
-        var newTokens = _.rest(tokens)
-        return new compiler.TokensLabel(newTokens, label)
+        return {
+          label: head.substr(0, head.length - 1),
+          tokens: _.rest(tokens)
+        }
       }
       // if head contains a label and another token
       else {
-        var label = head.substr(0, colonIndex)
         var newHead = head.substr(colonIndex + 1, head.length)
-        // asert newHead.length > 0
         tokens[0] = newHead
-        return new compiler.TokensLabel(tokens, label)
+        return {
+          label: head.substr(0, colonIndex),
+          tokens: tokens
+        }
       }
     }
   }
