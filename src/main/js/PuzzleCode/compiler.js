@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 PuzzleCode.compiler = (function(){
   var compiler = {};
 
@@ -49,7 +50,7 @@ PuzzleCode.compiler = (function(){
    * instruction --- most commonly error messages. 
    */
   compiler.CommentSchema = {
-    "$schema":  PuzzleCode.JSON_SCHEMA,
+    "$schema": PuzzleCode.JSON_SCHEMA,
     "type": "object",
     "properties": {
 
@@ -65,7 +66,7 @@ PuzzleCode.compiler = (function(){
 
   // Instruction objects
   compiler.InstructionSchema = {
-    "$schema":  PuzzleCode.JSON_SCHEMA,
+    "$schema": PuzzleCode.JSON_SCHEMA,
     "type": "object",
     "properties": {
 
@@ -117,7 +118,7 @@ PuzzleCode.compiler = (function(){
    ****************************************************************************/
   compiler.Error = {
     MALFORMED_MOVE: {
-      message:    "Malformed 'move' instruction",
+      message: "Malformed 'move' instruction",
       urlKeyword: "malformed_move"
     },
     TURN_WITHOUT_DIRECTION: {
@@ -355,7 +356,7 @@ PuzzleCode.compiler = (function(){
    * @param labels map from label-string to instruction pointer for that label
    */
   compiler.compileLine = function(line, labels) {
-    
+
     var tokens = compiler.tokenize(line)
     tokens = compiler.removeComment(tokens)
     var tokensLabel = compiler.removeLabel(tokens)
@@ -364,7 +365,7 @@ PuzzleCode.compiler = (function(){
 
     var instruction = {
       error: false
-    } 
+    }
 
     // check for invalid labels
     if (label != null) {
@@ -399,7 +400,7 @@ PuzzleCode.compiler = (function(){
       instruction.comment = compiler.Error.invalidOpcode(opcode)
       instruction.error = true
     }
-    
+
     return instruction
   }
 
