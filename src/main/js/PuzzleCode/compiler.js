@@ -45,48 +45,78 @@ PuzzleCode.compiler = (function(){
    * instruction --- most commonly error messages. 
    */
   compiler.CommentSchema = {
-    "$schema": PuzzleCode.JSON_SCHEMA,
-    "type": "object",
-    "properties": {
+    $schema: PuzzleCode.JSON_SCHEMA,
+    type: "object",
+    properties: {
 
         // The message for the comment
-        "message": { "type": "string" },
-
+        message: {type: "string"},
+        
         // If the message should be hyperlinked, the urlKeyword specifies
         // the "keyword" part of the hyperlink
-        "urlKeyword": { "type": "string" },
+        urlKeyword: {type: "string"},
     },
-    "required": ["message"]
+    required: ["message"]
   }
 
   // Instruction objects
   compiler.InstructionSchema = {
-    "$schema": PuzzleCode.JSON_SCHEMA,
-    "type": "object",
-    "properties": {
+    $schema: PuzzleCode.JSON_SCHEMA,
+    type: "object",
+    properties: {
 
         // opcode must be either absent or a value from the Opcode enum
         // if opcode is absent, then it represents a NOOP
-        "opcode": {"enum": _.values(compiler.Opcode) },
+        opcode: {enum: _.values(compiler.Opcode) },
 
         // Some instructions have data associated with the opcode.
         // For example, the TURN instruction has the turn-direction as the data.
         // The interpretation of data depends on opcode.
-        "data": {},
+        data: {},
 
         // A compilter-generated comment associated with the instruction
-        "comment": compiler.CommentSchema,
+        comment: compiler.CommentSchema,
 
         // true iff there was an error compiling the instruction
-        "error": {"type": "boolean"},
+        error: {type: "boolean"},
 
         // the label for this instruction
-        "label": {"type": "string"},
+        label: {type: "string"},
 
         // the index of the line from the program text
-        "lineIndex": {"type": "integer"},
+        lineIndex: {type: "integer"},
     },
-    "required": ["error"]
+    required: ["error"]
+  }
+
+  compiler.ProgramSchema = {
+    $schema: PuzzleCode.JSON_SCHEMA,
+    type: "object",
+    properties: {
+
+      // the entire text of the program
+      programText: {type: "string"},
+      
+      // instructions is present iff programText was parsed without error
+      // if there was an error, then instructions is absent
+      instructions: {
+        type: "array",
+        items: compiler.InstructionSchema
+      },
+      
+      // comments maps line numbers (from programText) to Comment objects 
+      comments: {
+        type: "object",
+        patternProperties: {
+          "^[0-9]+$": compiler.CommentSchema
+        },
+        additionalProperties: false
+      },
+
+      // true iff the program violates a constraint
+      constraintViolation: {type: "boolean"}
+    },
+    required: ["programText", "comments", "constraintViolation"]
   }
 
 #endif // #ifdef __DEBUG__
