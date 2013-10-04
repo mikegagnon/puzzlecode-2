@@ -14,12 +14,14 @@ var PuzzleCode = {
 PuzzleCode.HELP_URL = "http://puzzlecode.org/help/"
 PuzzleCode.JSON_SCHEMA = "http://json-schema.org/draft-04/schema#"
 PuzzleCode.assert = function(message, func) {
+  "use strict"
   if (PuzzleCode.DEBUG && !func()) {
     alert(message)
     console.error(message)
   }
 }
 PuzzleCode.direction = (function(){
+  "use strict"
  var direction = {}
   /**
    * Constants

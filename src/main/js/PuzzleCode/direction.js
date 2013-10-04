@@ -4,6 +4,7 @@
 #include "main/js/PuzzleCode/header.js"
 
 PuzzleCode.direction = (function(){
+  "use strict"
 
 	var direction = {}
 
