@@ -7,6 +7,8 @@
 #include "main/js/PuzzleCode/direction.js"
 
 PuzzleCode.compiler = (function(){
+  "use strict"
+
   var compiler = {};
 
   /**
@@ -313,7 +315,7 @@ PuzzleCode.compiler = (function(){
       instruction.comment = compiler.Error.MALFORMED_GOTO
       instruction.error = true
     } else {
-      label = tokens[1]
+      var label = tokens[1]
       if (compiler.isValidLabel(label)) {
         instruction.data = label
       } else {
