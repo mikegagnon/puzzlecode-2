@@ -2,7 +2,12 @@
 #define __MAIN_HEADER_JS__
 
 var PuzzleCode = {
-	DEBUG: __DEBUG__
+
+#ifdef __DEBUG__
+	DEBUG: true
+#else
+	DEBUG: false
+#endif
 }
 
 #endif

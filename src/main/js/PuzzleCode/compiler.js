@@ -32,6 +32,8 @@ PuzzleCode.compiler = (function(){
   // regex for identifiers
   compiler.IDENT_REGEX = /^[A-Za-z][A-Za-z0-9_]*$/
 
+#ifdef __DEBUG__
+
   /**
    * Schemas for JSON objects
    ****************************************************************************/
@@ -85,24 +87,7 @@ PuzzleCode.compiler = (function(){
     "required": ["error"]
   }
 
-  /**
-   * Data structures
-   ****************************************************************************/
-
-  compiler.Program = function(
-      // string
-      programText,
-      // array of instruction objects (or null if there was an error)
-      instructions,
-      // maps lineNumber to comment for that line
-      lineComments,
-      // true iff the program violates a constraint
-      constraintViolation) {
-    this.programText = programText
-    this.instructions = instructions
-    this.lineComments = lineComments
-    this.constraintViolation = constraintViolation
-  }
+#endif // #ifdef __DEBUG__
 
   /**
    * Compilation errors
