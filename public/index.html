@@ -6,5 +6,58 @@
     <script src="js/lodash.js"></script>
     <script src="js/tv4.js"></script>
     <script src="js/PuzzleCode.js"></script>
+  </head>
+  <body>
+  	<div class="board" id="boardDiv">
+      <svg id="board" xmlns="http://www.w3.org/2000/svg" >
+        <defs>
+  
+          <g id="xTemplate" height="32" width="32">
+            <path d="M10 10 L22 22" stroke="white" stroke-width="2"/>
+            <path d="M10 22 L22 10" stroke="white" stroke-width="2"/>
+          </g>
+
+          <g id="blockTemplate" height="32" width="32" >
+            <rect x="0" y="0" width="32" height="32" fill="#888" />
+            <path d="M0 0 L32 0 L28 4 L4 4 Z"
+              stroke="none" fill="#aaa"/>
+            <path d="M0 0 L4 4 L4 28 L0 32 Z"
+              stroke="none" fill="#aaa"/>
+            <path d="M32 0 L28 4 L28 28 L32 32 Z"
+              stroke="none" fill="#666"/>
+            <path d="M32 32 L28 28 L4 28 L0 32 Z"
+              stroke="none" fill="#666"/>
+          </g>
+
+          <!-- the bot is facing up -->
+          <!-- TODO: put this SVG image in a separate file-->
+          <g id="botTemplate" height="32" width="32" >
+
+            <circle
+              stroke="black"
+              fill="steelblue"
+              r="9"
+              cx="16"
+              cy="16" ></circle>
+
+            <!-- the head -->
+            <g transform="rotate(45 16 16)">
+              <!-- fill in the head -->
+              <path
+                d="M7 7 L17 7 L7 17 Z"
+                stroke="none"
+                fill="steelblue" />
+
+              <!-- outline the head -->
+              <path
+                d="M7 7 L17 7 M7 7 L7 17"
+                stroke="black"
+                stroke-width="1"
+                fill="none" />
+              </g>
+          </g>
+        </defs>
+      </svg>
+    </div> 
   </body>
 </html>
