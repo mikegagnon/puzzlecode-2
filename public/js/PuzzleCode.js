@@ -465,7 +465,9 @@ PuzzleCode.compiler = (function(){
         if ("label" in instr) {
           labels[instr.label] = instructions.length
         }
-        instructions.push(instr)
+        if ("opcode" in instr) {
+          instructions.push(instr)
+        }
       }
     })
 
@@ -475,9 +477,11 @@ PuzzleCode.compiler = (function(){
         error = true
         constraintViolation = true
         // add an error message at each instruction past the limit
-        _(instructions).forEach(function(instr){
-          comments[instr.lineIndex] = compiler.Error.TOO_MANY_INSTRUCTIONS
-        })
+        _.range(constraints.max_instructions, instructions.length)
+          .map(function(i){
+            var instr = instructions[i]
+            comments[instr.lineIndex] = compiler.Error.TOO_MANY_INSTRUCTIONS
+          })
       }
     }
 
@@ -884,6 +888,22 @@ var cases = [
     }
  },
  {
+  programText: "\n\nmove\n\n",
+  constraints: {},
+  expectedOutput: {
+   programText: "\n\nmove\n\n",
+   instructions: [
+    {
+     opcode: compiler.Opcode.MOVE,
+     error: false,
+     lineIndex: 2
+    }
+   ],
+      comments: {},
+      constraintViolation: false
+    }
+ },
+ {
   programText: "mov",
   constraints: {},
   expectedOutput: {
@@ -931,6 +951,43 @@ var cases = [
      lineIndex: 2
     },
    ],
+    }
+ },
+ {
+  programText: "\nmove\nmove",
+  constraints: {
+   max_instructions: 2
+  },
+  expectedOutput: {
+   programText: "\nmove\nmove",
+      comments: {},
+      constraintViolation: false,
+      instructions: [
+        {
+     opcode: compiler.Opcode.MOVE,
+     error: false,
+     lineIndex: 1
+    },
+    {
+     opcode: compiler.Opcode.MOVE,
+     error: false,
+     lineIndex: 2
+    },
+   ]
+    }
+ },
+ {
+  programText: "\nmove\nmove\n\nmove",
+  constraints: {
+   max_instructions: 1
+  },
+  expectedOutput: {
+   programText: "\nmove\nmove\n\nmove",
+      comments: {
+       2: compiler.Error.TOO_MANY_INSTRUCTIONS,
+       4: compiler.Error.TOO_MANY_INSTRUCTIONS,
+      },
+      constraintViolation: true,
     }
  },
 ]

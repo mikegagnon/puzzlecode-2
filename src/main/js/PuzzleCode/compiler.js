@@ -462,7 +462,9 @@ PuzzleCode.compiler = (function(){
         if ("label" in instr) {
           labels[instr.label] = instructions.length
         }
-        instructions.push(instr)
+        if ("opcode" in instr) {
+          instructions.push(instr)
+        }
       }
 
     })
@@ -473,9 +475,11 @@ PuzzleCode.compiler = (function(){
         error = true
         constraintViolation = true
         // add an error message at each instruction past the limit
-        _(instructions).forEach(function(instr){
-          comments[instr.lineIndex] = compiler.Error.TOO_MANY_INSTRUCTIONS
-        })
+        _.range(constraints.max_instructions, instructions.length)
+          .map(function(i){
+            var instr = instructions[i]
+            comments[instr.lineIndex] = compiler.Error.TOO_MANY_INSTRUCTIONS
+          })          
       }
     }
 

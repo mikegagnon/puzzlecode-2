@@ -391,6 +391,22 @@ var cases = [
     }
 	},
 	{
+		programText: "\n\nmove\n\n",
+		constraints: {},
+		expectedOutput: {
+			programText: "\n\nmove\n\n",
+			instructions: [
+				{
+					opcode: compiler.Opcode.MOVE,
+					error: false,
+					lineIndex: 2
+				}
+			],
+      comments: {},
+      constraintViolation: false
+    }
+	},
+	{
 		programText: "mov",
 		constraints: {},
 		expectedOutput: {
@@ -440,7 +456,43 @@ var cases = [
 			],
     }
 	},
-
+	{
+		programText: "\nmove\nmove",
+		constraints: {
+			max_instructions: 2
+		},
+		expectedOutput: {
+			programText: "\nmove\nmove",
+      comments: {},
+      constraintViolation: false,
+      instructions: [
+        {
+					opcode: compiler.Opcode.MOVE,
+					error: false,
+					lineIndex: 1
+				},
+				{
+					opcode: compiler.Opcode.MOVE,
+					error: false,
+					lineIndex: 2
+				},
+			]
+    }
+	},
+	{
+		programText: "\nmove\nmove\n\nmove",
+		constraints: {
+			max_instructions: 1
+		},
+		expectedOutput: {
+			programText: "\nmove\nmove\n\nmove",
+      comments: {
+      	2: compiler.Error.TOO_MANY_INSTRUCTIONS,
+      	4: compiler.Error.TOO_MANY_INSTRUCTIONS,
+      },
+      constraintViolation: true,
+    }
+	},
 ]
 
 _(cases).forEach(function(tc){
