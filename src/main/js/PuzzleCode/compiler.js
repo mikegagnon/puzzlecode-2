@@ -9,7 +9,7 @@
 PuzzleCode.compiler = (function(){
   "use strict"
 
-  var compiler = {};
+  var compiler = {}
 
   /**
    * Constants
