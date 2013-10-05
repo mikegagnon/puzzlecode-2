@@ -389,7 +389,58 @@ var cases = [
       comments: {},
       constraintViolation: false
     }
-	}
+	},
+	{
+		programText: "mov",
+		constraints: {},
+		expectedOutput: {
+			programText: "mov",
+      comments: {
+      	0: compiler.Error.invalidOpcode("mov")
+      },
+      constraintViolation: false
+    }
+	},
+	{
+		programText: "\nmove\nmov",
+		constraints: {},
+		expectedOutput: {
+			programText: "\nmove\nmov",
+      comments: {
+      	2: compiler.Error.invalidOpcode("mov")
+      },
+      constraintViolation: false
+    }
+	},
+	{
+		programText: "move\nfoo:move\ngoto foo",
+		constraints: {},
+		expectedOutput: {
+			programText: "move\nfoo:move\ngoto foo",
+      comments: {},
+      constraintViolation: false,
+      instructions: [
+				{
+					opcode: compiler.Opcode.MOVE,
+					error: false,
+					lineIndex: 0
+				},
+				{
+					label: "foo",
+					opcode: compiler.Opcode.MOVE,
+					error: false,
+					lineIndex: 1
+				},
+				{
+					opcode: compiler.Opcode.GOTO,
+					data: 1,
+					error: false,
+					lineIndex: 2
+				},
+			],
+    }
+	},
+
 ]
 
 _(cases).forEach(function(tc){
