@@ -473,15 +473,15 @@ PuzzleCode.compiler = (function(){
 
     // ensure max_instructions is not exceeded
     if (!error && "max_instructions" in constraints) {
-      if (instructions.length > constraints.max_instructions) {
+      var max_instructions = constraints.max_instructions
+      if (instructions.length > max_instructions) {
         error = true
         constraintViolation = true
         // add an error message at each instruction past the limit
-        _.range(constraints.max_instructions, instructions.length)
-          .map(function(i){
-            var instr = instructions[i]
-            comments[instr.lineIndex] = compiler.Error.TOO_MANY_INSTRUCTIONS
-          })
+        _.range(max_instructions, instructions.length).map(function(i){
+          var instr = instructions[i]
+          comments[instr.lineIndex] = compiler.Error.TOO_MANY_INSTRUCTIONS
+        })
       }
     }
 
