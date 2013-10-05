@@ -371,4 +371,31 @@ _(cases).forEach(function(tc){
 })
 
 
+/******************************************************************************/
+TEST = "PuzzleCode.compiler.compile"
+var cases = [
+	{
+		programText: "move",
+		constraints: {},
+		expectedOutput: {
+			programText: "move",
+			instructions: [
+				{
+					opcode: compiler.Opcode.MOVE,
+					error: false,
+					lineIndex: 0
+				}
+			],
+      comments: {},
+      constraintViolation: false
+    }
+	}
+]
+
+_(cases).forEach(function(tc){
+	tc.output = compiler.compile(tc.programText, tc.constraints)
+	test(tc, tv4.validate(tc.output, compiler.ProgramSchema))
+	test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+
 #endif

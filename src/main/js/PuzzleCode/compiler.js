@@ -89,6 +89,9 @@ PuzzleCode.compiler = (function(){
     required: ["error"]
   }
 
+  /**
+   * A Program object holds a compiled program
+   */
   compiler.ProgramSchema = {
     $schema: PuzzleCode.JSON_SCHEMA,
     type: "object",
@@ -97,14 +100,16 @@ PuzzleCode.compiler = (function(){
       // the entire text of the program
       programText: {type: "string"},
       
-      // instructions is present iff programText was parsed without error
-      // if there was an error, then instructions is absent
+      // if there was an error compiling programText, then instructions is
+      // absent.
+      // if compilation succeeded, then instructions is an array of Instruction
+      // objects, where each instruction object has .error = false
       instructions: {
         type: "array",
         items: compiler.InstructionSchema
       },
       
-      // comments maps line numbers (from programText) to Comment objects 
+      // comments maps line indexes (from programText) to Comment objects 
       comments: {
         type: "object",
         patternProperties: {
@@ -174,7 +179,17 @@ PuzzleCode.compiler = (function(){
         message: "'" + compiler.trim(opcode) + "' is not an instruction",
         urlKeyword: "invalid_opcode"
       }
-    }
+    },
+    TOO_MANY_INSTRUCTIONS: {
+      message: "Too many instructions",
+      urlKeyword: "too_many_instructions"
+    },
+    labelDoesNotExist: function(label) {
+      return {
+        message: "The label '" + compiler.trim(label) + "' does not exist",
+        urlKeyword: "label_does_not_exist"
+      }
+    },
   }
 
   /**
@@ -410,6 +425,85 @@ PuzzleCode.compiler = (function(){
     }
 
     return instruction
+  }      
+
+  /**
+   *
+   ****************************************************************************/
+
+  // Compiles a programText into a Program object
+  compiler.compile = function(programText, constraints) {
+
+    var lines = programText.split("\n")
+
+    var instructions = []
+    var comments = {}
+
+    // map from label-string to instruction-index
+    var labels = {}
+
+    var error = false
+    var constraintViolation = false
+
+    // first pass: do everything except finalize GOTO statements
+    _.times(lines.length, function(i){
+
+      var line = lines[i]
+      var instr = compiler.compileLine(line, labels)
+      instr.lineIndex = i
+
+      error = error || instr.error
+
+      if ("comment" in instr) {
+        comments[i] = instr.comment
+      }
+
+      if (!instr.error) {
+        if ("label" in instr) {
+          labels[instr.label] = instructions.length
+        }
+        instructions.push(instr)
+      }
+
+    })
+
+    // ensure max_instructions is not exceeded
+    if (!error && "max_instructions" in constraints) {
+      if (instructions.length > constraints.max_instructions) {
+        error = true
+        constraintViolation = true
+        // add an error message at each instruction past the limit
+        _(instructions).forEach(function(instr){
+          comments[instr.lineIndex] = compiler.Error.TOO_MANY_INSTRUCTIONS
+        })
+      }
+    }
+
+    // second pass: finalize GOTO statements
+    _(instructions).forEach(function(instr){
+      if (instr.opcode == compiler.Opcode.GOTO) {
+        var label = instr.data
+        if (label in labels) {
+          // replace string label with numeric label
+          instr.data = labels[label]
+        } else {
+          error = true
+          comments[instr.lineIndex] = compiler.Error.labelDoesNotExist(label)
+        }
+      }
+    })
+
+    var program = {
+      programText: programText,
+      comments: comments,
+      constraintViolation: constraintViolation
+    }
+
+    if (!error) {
+      program.instructions = instructions
+    }
+
+    return program
   }
 
   return compiler
