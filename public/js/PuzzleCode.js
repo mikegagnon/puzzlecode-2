@@ -603,6 +603,13 @@ PuzzleCode.init = function(boardSettings, divId) {
 }
 var board1 = PuzzleCode.init({}, "#board1")
 var board2 = PuzzleCode.init({numCols: 6}, "#board2")
+PuzzleCode.sim = (function(){
+  "use strict"
+  var sim = {}
+ sim.step = function(board) {
+ }
+ return sim
+})()
 var FILENAME = undefined
 var TEST = undefined
 function test(testCase, bool) {

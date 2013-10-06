@@ -1,6 +1,6 @@
 
 #include "compiler.js"
 #include "board.js"
-#include "simulator.js"
 #include "viz.js"
 #include "init.js"
+#include "sim.js"
