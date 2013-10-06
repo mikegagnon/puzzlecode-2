@@ -9,13 +9,14 @@ PuzzleCode.viz = (function(){
 
   var viz = {}
 
-	viz.drawBoardContainer = function(board, boardId) {
+	viz.drawBoardContainer = function(board) {
 
 	  var h = board.settings.height = board.settings.numRows * board.settings.cellSize
 	 	var w = board.settings.width = board.settings.numCols * board.settings.cellSize
 
-	  board.d3 = d3.select(boardId)
-	    .attr("class", "vis")
+	 	console.log(board.svgId)
+
+	  board.d3 = d3.select(board.svgId)
 	    .attr("height", h)
 	    .attr("width", w)
 	}
@@ -48,17 +49,30 @@ PuzzleCode.viz = (function(){
 
 	/**
 	 * Creates and returns new Board object.
+	 *
+	 * @param boardSettings should be a BoardSettings object
+	 * @param divId should be the HTML id for an empty div. The visualization for
+	 * the board will be inserted into this div object 
 	 */
-	viz.init = function(boardSettings, boardId) {
+	viz.init = function(boardSettings, divId) {
+
+		var svgId = divId + "_svg"
+
+		$(divId)
+			.addClass("board")
+			.append("<svg id='" + svgId.replace(/^#/,'') + "' class='svgBoard' " +
+							"xmlns='http://www.w3.org/2000/svg'></svg>")
 
 		var defaultSettings = _.cloneDeep(PuzzleCode.board.DEFAULT_SETTINGS)
 		var settings = _.merge(defaultSettings, boardSettings)
 
 		var board = {
-			settings: settings
+			settings: settings,
+			divId: divId,
+			svgId: svgId
 		}
 
-	  viz.drawBoardContainer(board, boardId)
+	  viz.drawBoardContainer(board)
 	  viz.drawCells(board)
 
 	  return board
@@ -67,6 +81,7 @@ PuzzleCode.viz = (function(){
   return viz
 })()
 
-var board = PuzzleCode.viz.init({}, "#board")
+var board = PuzzleCode.viz.init({}, "#board1")
+var board = PuzzleCode.viz.init({numCols: 6}, "#board2")
 
 #endif
