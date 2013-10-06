@@ -46,6 +46,13 @@ PuzzleCode.viz = (function(){
 	}
 
 	viz.init = function(board) {
+		board.svgId = board.divId + "_svg"
+
+		$(board.divId)
+			.addClass("board")
+			.append("<svg id='" + board.svgId.replace(/^#/,'') + "' class='svgBoard' " +
+							"xmlns='http://www.w3.org/2000/svg'></svg>")
+
 		PuzzleCode.viz.drawBoardContainer(board)
   	PuzzleCode.viz.drawCells(board)
 	}

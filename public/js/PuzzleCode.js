@@ -573,6 +573,11 @@ PuzzleCode.viz = (function(){
    .attr("class", "pcGridLine")
  }
  viz.init = function(board) {
+  board.svgId = board.divId + "_svg"
+  $(board.divId)
+   .addClass("board")
+   .append("<svg id='" + board.svgId.replace(/^#/,'') + "' class='svgBoard' " +
+       "xmlns='http://www.w3.org/2000/svg'></svg>")
   PuzzleCode.viz.drawBoardContainer(board)
    PuzzleCode.viz.drawCells(board)
  }
@@ -587,17 +592,11 @@ PuzzleCode.viz = (function(){
  */
 PuzzleCode.init = function(boardSettings, divId) {
   "use strict"
- var svgId = divId + "_svg"
- $(divId)
-  .addClass("board")
-  .append("<svg id='" + svgId.replace(/^#/,'') + "' class='svgBoard' " +
-      "xmlns='http://www.w3.org/2000/svg'></svg>")
  var defaultSettings = _.cloneDeep(PuzzleCode.board.DEFAULT_SETTINGS)
  var settings = _.merge(defaultSettings, boardSettings)
  var board = {
   settings: settings,
   divId: divId,
-  svgId: svgId
  }
   PuzzleCode.viz.init(board)
   return board

@@ -15,20 +15,12 @@
 PuzzleCode.init = function(boardSettings, divId) {
   "use strict"
 
-	var svgId = divId + "_svg"
-
-	$(divId)
-		.addClass("board")
-		.append("<svg id='" + svgId.replace(/^#/,'') + "' class='svgBoard' " +
-						"xmlns='http://www.w3.org/2000/svg'></svg>")
-
 	var defaultSettings = _.cloneDeep(PuzzleCode.board.DEFAULT_SETTINGS)
 	var settings = _.merge(defaultSettings, boardSettings)
 
 	var board = {
 		settings: settings,
 		divId: divId,
-		svgId: svgId
 	}
 
   PuzzleCode.viz.init(board)
