@@ -46,6 +46,9 @@ PuzzleCode.viz = (function(){
 	}
 
 	viz.init = function(board) {
+
+		board.viz = {}
+
 		board.svgId = board.divId + "_svg"
 
 		$(board.divId)
