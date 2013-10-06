@@ -13,8 +13,10 @@ PuzzleCode.viz = (function(){
 
 	viz.drawBoardContainer = function(board) {
 
-	  var h = board.config.height = board.config.numRows * board.config.cellSize
-	 	var w = board.config.width = board.config.numCols * board.config.cellSize
+	  var h = board.config.heightPixels =
+	  	board.config.height * board.config.cellSize
+	 	var w = board.config.widthPixels =
+	 		board.config.width * board.config.cellSize
 
 	  board.d3 = d3.select(board.svgId)
 	    .attr("height", h)
@@ -23,8 +25,10 @@ PuzzleCode.viz = (function(){
 
 	viz.drawCells = function(board) {
 
-		var hlines = _.range(board.config.numRows + 1)
-		var vlines = _.range(board.config.numCols + 1)
+		console.dir(board)
+
+		var hlines = _.range(board.config.height + 1)
+		var vlines = _.range(board.config.width + 1)
 
 	  var cellSize = board.config.cellSize
 
@@ -33,7 +37,7 @@ PuzzleCode.viz = (function(){
 			.enter().append("svg:line")
 			.attr("x1", 0)
 			.attr("y1", function(d){ return d * cellSize})
-			.attr("x2", board.config.width)
+			.attr("x2", board.config.widthPixels)
 			.attr("y2", function(d){ return d * cellSize})
 			.attr("class", "pcGridLine")
 
@@ -43,7 +47,7 @@ PuzzleCode.viz = (function(){
 			.attr("x1", function(d){ return d * cellSize})
 			.attr("y1", 0)
 			.attr("x2", function(d){ return d * cellSize})
-			.attr("y2", board.config.height)
+			.attr("y2", board.config.heightPixels)
 			.attr("class", "pcGridLine")
 	}
 

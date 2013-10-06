@@ -38,6 +38,27 @@ PuzzleCode.sim = (function(){
 	  }
 	}
 
+	// a bot tries to move into cell x,y.
+	// returns true if the bot is allowed to move in, false otherwise
+	sim.tryMove = function(board, bot, x, y) {
+	  // TODO: matching objects like this doesn't seem to to be the best idea.
+	  // Instead, uild up a cell matrix or some other data structure
+	  var matchingBlocks = _(board.blocks)
+	    .filter( function(block) {
+	      return block.x == x && block.y == y
+	    })
+	    .value()
+
+	  var matchingBots = _(board.bots)
+	    .filter( function(bot) {
+	      return bot.cellX == x && bot.cellY == y
+	    })
+	    .value()
+
+	  return matchingBlocks.length == 0 && matchingBots.length == 0
+	}
+
+
   // Make one step in the simulation
 	sim.step = function(board) {
 	

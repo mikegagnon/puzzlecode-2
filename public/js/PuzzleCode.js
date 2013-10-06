@@ -561,8 +561,8 @@ PuzzleCode.board = (function(){
   "use strict"
   var board = {}
   board.DEFAULT_CONFIG = {
-  numRows: 5,
-  numCols: 10,
+  height: 5,
+  width: 10,
   cellSize: 32,
   bots: []
  }
@@ -574,15 +574,15 @@ PuzzleCode.board = (function(){
     $schema: PuzzleCode.JSON_SCHEMA,
     type: "object",
     properties: {
-     numRows: {type: "integer"},
-     numCols: {type: "integer"},
+     height: {type: "integer"},
+     width: {type: "integer"},
      cellSize: {type: "integer"},
      bots: {
         type: "array",
         items: PuzzleCode.bot.BotConfigSchema
       },
     },
-    required: ["numRows", "numCols", "cellSize", "bots"]
+    required: ["height", "width", "cellSize", "bots"]
   }
  return board
 })()
@@ -591,22 +591,25 @@ PuzzleCode.viz = (function(){
   var direction = PuzzleCode.direction
   var viz = {}
  viz.drawBoardContainer = function(board) {
-   var h = board.config.height = board.config.numRows * board.config.cellSize
-   var w = board.config.width = board.config.numCols * board.config.cellSize
+   var h = board.config.heightPixels =
+    board.config.height * board.config.cellSize
+   var w = board.config.widthPixels =
+    board.config.width * board.config.cellSize
    board.d3 = d3.select(board.svgId)
      .attr("height", h)
      .attr("width", w)
  }
  viz.drawCells = function(board) {
-  var hlines = _.range(board.config.numRows + 1)
-  var vlines = _.range(board.config.numCols + 1)
+  console.dir(board)
+  var hlines = _.range(board.config.height + 1)
+  var vlines = _.range(board.config.width + 1)
    var cellSize = board.config.cellSize
   board.d3.selectAll(".hline")
    .data(hlines)
    .enter().append("svg:line")
    .attr("x1", 0)
    .attr("y1", function(d){ return d * cellSize})
-   .attr("x2", board.config.width)
+   .attr("x2", board.config.widthPixels)
    .attr("y2", function(d){ return d * cellSize})
    .attr("class", "pcGridLine")
   board.d3.selectAll(".vline")
@@ -615,7 +618,7 @@ PuzzleCode.viz = (function(){
    .attr("x1", function(d){ return d * cellSize})
    .attr("y1", 0)
    .attr("x2", function(d){ return d * cellSize})
-   .attr("y2", board.config.height)
+   .attr("y2", board.config.heightPixels)
    .attr("class", "pcGridLine")
  }
  viz.directionToAngle = function(dir) {
@@ -691,13 +694,25 @@ PuzzleCode.init = function(boardConfig, divId) {
   bot.program = program
   error = error || program.error
  })
+  var matrix = _(boardConfig.width)
+    .range()
+    .map(function(x){
+      return _(boardConfig.height)
+        .range()
+        .map(function(y){
+          return {}
+        })
+        .value()
+    })
+    .value()
  var board = {
   config: config,
   divId: divId,
   // All elements in board are immutable, except for the state element
   state: {
    error: error,
-   bots: _.cloneDeep(config.bots)
+   bots: _.cloneDeep(config.bots),
+      matrix: matrix
   }
  }
   PuzzleCode.viz.init(board)
@@ -776,6 +791,23 @@ PuzzleCode.sim = (function(){
       torus: false
      }
    }
+ }
+ // a bot tries to move into cell x,y.
+ // returns true if the bot is allowed to move in, false otherwise
+ sim.tryMove = function(board, bot, x, y) {
+   // TODO: matching objects like this doesn't seem to to be the best idea.
+   // Instead, uild up a cell matrix or some other data structure
+   var matchingBlocks = _(board.blocks)
+     .filter( function(block) {
+       return block.x == x && block.y == y
+     })
+     .value()
+   var matchingBots = _(board.bots)
+     .filter( function(bot) {
+       return bot.cellX == x && bot.cellY == y
+     })
+     .value()
+   return matchingBlocks.length == 0 && matchingBots.length == 0
  }
   // Make one step in the simulation
  sim.step = function(board) {

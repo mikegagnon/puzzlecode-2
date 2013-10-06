@@ -5,6 +5,7 @@
 #include "main/js/PuzzleCode/bot.js"
 #include "main/js/PuzzleCode/direction.js"
 #include "main/js/PuzzleCode/viz.js"
+#include "main/js/PuzzleCode/board.js"
 
 /**
  * Creates and returns new Board object.
@@ -28,6 +29,18 @@ PuzzleCode.init = function(boardConfig, divId) {
 		error = error || program.error
 	})
 
+  var matrix = _(boardConfig.width)
+    .range()
+    .map(function(x){
+      return _(boardConfig.height)
+        .range()
+        .map(function(y){
+          return {}
+        })
+        .value()
+    })
+    .value()
+
 	var board = {
 		config: config,
 		divId: divId,
@@ -35,7 +48,8 @@ PuzzleCode.init = function(boardConfig, divId) {
 		// All elements in board are immutable, except for the state element
 		state: {
 			error: error,
-			bots: _.cloneDeep(config.bots)
+			bots: _.cloneDeep(config.bots),
+      matrix: matrix
 		}
 	}
 

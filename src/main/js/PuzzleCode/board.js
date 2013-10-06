@@ -10,8 +10,8 @@ PuzzleCode.board = (function(){
   var board = {}
 
   board.DEFAULT_CONFIG = {
-		numRows: 5,
-		numCols: 10,
+		height: 5,
+		width: 10,
 		cellSize: 32,
 		bots: []
 	}
@@ -26,15 +26,15 @@ PuzzleCode.board = (function(){
     $schema: PuzzleCode.JSON_SCHEMA,
     type: "object",
     properties: {
-    	numRows: {type: "integer"},
-    	numCols: {type: "integer"},
+    	height: {type: "integer"},
+    	width: {type: "integer"},
     	cellSize: {type: "integer"},
     	bots: {
         type: "array",
         items: PuzzleCode.bot.BotConfigSchema
       },
     },
-    required: ["numRows", "numCols", "cellSize", "bots"]
+    required: ["height", "width", "cellSize", "bots"]
   }
 
 #endif // #ifdef __DEBUG__
