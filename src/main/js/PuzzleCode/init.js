@@ -21,7 +21,8 @@ PuzzleCode.init = function(boardConfig, divId) {
 
 	var error = false
 
-	_(config.bots).forEach(function(bot){
+	_(config.bots).forEach(function(bot, id){
+		bot.id = id
 		var program = PuzzleCode.compiler.compile(bot.programText, bot.constraints)
 		bot.program = program
 		error = error || program.error
@@ -33,7 +34,8 @@ PuzzleCode.init = function(boardConfig, divId) {
 
 		// All elements in board are immutable, except for the state element
 		state: {
-			error: error
+			error: error,
+			bots: _.cloneDeep(config.bots)
 		}
 	}
 
@@ -48,13 +50,45 @@ var config = {
       botColor: PuzzleCode.bot.Color.BLUE,
       x: 2,
       y: 3,
-      facing: PuzzleCode.direction.RIGHT,
+      facing: PuzzleCode.direction.UP,
       programText: "move\nmove",
+      constraints: {}
+    },
+    {
+      botColor: PuzzleCode.bot.Color.BLUE,
+      x: 0,
+      y: 0,
+      facing: PuzzleCode.direction.LEFT,
+      programText: "move",
       constraints: {}
     },
   ],
 }
 
-var board = PuzzleCode.init(config, "#board")
+var board1 = PuzzleCode.init(config, "#board1")
+
+var config = {
+	cellSize: 16,
+	bots: [
+    {
+      botColor: PuzzleCode.bot.Color.BLUE,
+      x: 0,
+      y: 0,
+      facing: PuzzleCode.direction.UP,
+      programText: "move\nmove",
+      constraints: {}
+    },
+    {
+      botColor: PuzzleCode.bot.Color.BLUE,
+      x: 3,
+      y: 3,
+      facing: PuzzleCode.direction.LEFT,
+      programText: "move",
+      constraints: {}
+    },
+  ],
+}
+
+var board2 = PuzzleCode.init(config, "#board2")
 
 #endif

@@ -448,9 +448,8 @@ PuzzleCode.compiler = (function(){
     var constraintViolation = false
 
     // first pass: do everything except finalize GOTO statements
-    _.times(lines.length, function(i){
+    _(lines).forEach(function(line, i) {
 
-      var line = lines[i]
       var instr = compiler.compileLine(line, labels)
       instr.lineIndex = i
 

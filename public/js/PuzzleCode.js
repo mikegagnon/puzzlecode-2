@@ -460,8 +460,7 @@ PuzzleCode.compiler = (function(){
     var error = false
     var constraintViolation = false
     // first pass: do everything except finalize GOTO statements
-    _.times(lines.length, function(i){
-      var line = lines[i]
+    _(lines).forEach(function(line, i) {
       var instr = compiler.compileLine(line, labels)
       instr.lineIndex = i
       error = error || instr.error
@@ -549,7 +548,7 @@ PuzzleCode.board = (function(){
   board.DEFAULT_CONFIG = {
   numRows: 5,
   numCols: 10,
-  cellSize: 30,
+  cellSize: 32,
   bots: []
  }
  /**
@@ -574,6 +573,7 @@ PuzzleCode.board = (function(){
 })()
 PuzzleCode.viz = (function(){
   "use strict"
+  var direction = PuzzleCode.direction
   var viz = {}
  viz.drawBoardContainer = function(board) {
    var h = board.config.height = board.config.numRows * board.config.cellSize
@@ -603,6 +603,48 @@ PuzzleCode.viz = (function(){
    .attr("y2", board.config.height)
    .attr("class", "pcGridLine")
  }
+ viz.directionToAngle = function(dir) {
+   if (dir == direction.UP) {
+     return 0
+   } else if (dir == direction.DOWN) {
+     return 180
+   } else if (dir == direction.LEFT) {
+     return -90
+   } else if (dir == direction.RIGHT) {
+     return 90
+   } else {
+     PuzzleCode.assert("directionToAngle bad direction: " + direction,
+      function(){ return false })
+   }
+ }
+ // Returns an svg translation command to update the bot's __pixel__ position on
+ // the board and it's direction
+ viz.botTransformPixels = function(board, x, y, facing) {
+  var halfCell = board.config.cellSize / 2
+   return "translate(" + x + ", " + y + ") " +
+     "rotate("
+      + viz.directionToAngle(facing) + " "
+      + halfCell + " " + halfCell +")"
+ }
+ // Like botTransformPixels, except using __cell__ position instead of __pixel__
+ viz.botTransform = function(board, bot) {
+   var x = bot.x * board.config.cellSize
+   var y = bot.y * board.config.cellSize
+   return viz.botTransformPixels(board, x, y, bot.facing)
+ }
+ viz.botId = function(board, bot) {
+   return board.svgId.replace(/^#/, "") + "_bot_" + bot.id
+ }
+ viz.drawBots = function(board){
+   board.d3.selectAll(".bot")
+     .data(board.state.bots)
+     .enter().append("svg:image")
+     .attr("id", function(bot){ return viz.botId(board, bot) })
+     .attr("xlink:href", "img/bluebot.svg")
+     .attr("height", board.config.cellSize)
+     .attr("width", board.config.cellSize)
+     .attr("transform", function(bot){ return viz.botTransform(board, bot) })
+ }
  viz.init = function(board) {
   board.viz = {}
   board.svgId = board.divId + "_svg"
@@ -610,8 +652,9 @@ PuzzleCode.viz = (function(){
    .addClass("board")
    .append("<svg id='" + board.svgId.replace(/^#/,'') + "' class='svgBoard' " +
        "xmlns='http://www.w3.org/2000/svg'></svg>")
-  PuzzleCode.viz.drawBoardContainer(board)
-   PuzzleCode.viz.drawCells(board)
+  viz.drawBoardContainer(board)
+   viz.drawCells(board)
+   viz.drawBots(board)
  }
   return viz
 })()
@@ -627,7 +670,8 @@ PuzzleCode.init = function(boardConfig, divId) {
  var defaultConfig = _.cloneDeep(PuzzleCode.board.DEFAULT_CONFIG)
  var config = _.merge(defaultConfig, boardConfig)
  var error = false
- _(config.bots).forEach(function(bot){
+ _(config.bots).forEach(function(bot, id){
+  bot.id = id
   var program = PuzzleCode.compiler.compile(bot.programText, bot.constraints)
   bot.program = program
   error = error || program.error
@@ -637,7 +681,8 @@ PuzzleCode.init = function(boardConfig, divId) {
   divId: divId,
   // All elements in board are immutable, except for the state element
   state: {
-   error: error
+   error: error,
+   bots: _.cloneDeep(config.bots)
   }
  }
   PuzzleCode.viz.init(board)
@@ -649,13 +694,43 @@ var config = {
       botColor: PuzzleCode.bot.Color.BLUE,
       x: 2,
       y: 3,
-      facing: PuzzleCode.direction.RIGHT,
+      facing: PuzzleCode.direction.UP,
       programText: "move\nmove",
+      constraints: {}
+    },
+    {
+      botColor: PuzzleCode.bot.Color.BLUE,
+      x: 0,
+      y: 0,
+      facing: PuzzleCode.direction.LEFT,
+      programText: "move",
       constraints: {}
     },
   ],
 }
-var board = PuzzleCode.init(config, "#board")
+var board1 = PuzzleCode.init(config, "#board1")
+var config = {
+ cellSize: 16,
+ bots: [
+    {
+      botColor: PuzzleCode.bot.Color.BLUE,
+      x: 0,
+      y: 0,
+      facing: PuzzleCode.direction.UP,
+      programText: "move\nmove",
+      constraints: {}
+    },
+    {
+      botColor: PuzzleCode.bot.Color.BLUE,
+      x: 3,
+      y: 3,
+      facing: PuzzleCode.direction.LEFT,
+      programText: "move",
+      constraints: {}
+    },
+  ],
+}
+var board2 = PuzzleCode.init(config, "#board2")
 PuzzleCode.sim = (function(){
   "use strict"
   var sim = {}

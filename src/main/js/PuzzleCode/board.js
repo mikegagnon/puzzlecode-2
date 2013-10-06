@@ -12,7 +12,7 @@ PuzzleCode.board = (function(){
   board.DEFAULT_CONFIG = {
 		numRows: 5,
 		numCols: 10,
-		cellSize: 30,
+		cellSize: 32,
 		bots: []
 	}
 
