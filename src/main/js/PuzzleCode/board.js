@@ -8,7 +8,7 @@ PuzzleCode.board = (function(){
 
   var board = {}
 
-  board.DEFAULT_SETTINGS = {
+  board.DEFAULT_CONFIG = {
 		numRows: 5,
 		numCols: 10,
 		cellSize: 30
@@ -19,11 +19,8 @@ PuzzleCode.board = (function(){
    * Schemas for JSON objects
    ****************************************************************************/
 
-  /**
-   * A Comment object represents a compiler-generated comment for an
-   * instruction --- most commonly error messages. 
-   */
-  board.BoardSettingsSchema = {
+  // A BoardConfig object
+  board.BoardConfigSchema = {
     $schema: PuzzleCode.JSON_SCHEMA,
     type: "object",
     properties: {

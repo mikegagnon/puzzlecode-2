@@ -8,18 +8,18 @@
 /**
  * Creates and returns new Board object.
  *
- * @param boardSettings should be a BoardSettings object
+ * @param boardConfig should be a BoardConfig object
  * @param divId should be the HTML id for an empty div. The visualization for
  * the board will be inserted into this div object 
  */
-PuzzleCode.init = function(boardSettings, divId) {
+PuzzleCode.init = function(boardConfig, divId) {
   "use strict"
 
-	var defaultSettings = _.cloneDeep(PuzzleCode.board.DEFAULT_SETTINGS)
-	var settings = _.merge(defaultSettings, boardSettings)
+	var defaultConfig = _.cloneDeep(PuzzleCode.board.DEFAULT_CONFIG)
+	var config = _.merge(defaultConfig, boardConfig)
 
 	var board = {
-		settings: settings,
+		config: config,
 		divId: divId,
 	}
 

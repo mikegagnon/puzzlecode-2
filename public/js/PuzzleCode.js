@@ -517,7 +517,7 @@ PuzzleCode.compiler = (function(){
 PuzzleCode.board = (function(){
   "use strict"
   var board = {}
-  board.DEFAULT_SETTINGS = {
+  board.DEFAULT_CONFIG = {
   numRows: 5,
   numCols: 10,
   cellSize: 30
@@ -525,11 +525,8 @@ PuzzleCode.board = (function(){
  /**
    * Schemas for JSON objects
    ****************************************************************************/
-  /**
-   * A Comment object represents a compiler-generated comment for an
-   * instruction --- most commonly error messages. 
-   */
-  board.BoardSettingsSchema = {
+  // A BoardConfig object
+  board.BoardConfigSchema = {
     $schema: PuzzleCode.JSON_SCHEMA,
     type: "object",
     properties: {
@@ -545,22 +542,22 @@ PuzzleCode.viz = (function(){
   "use strict"
   var viz = {}
  viz.drawBoardContainer = function(board) {
-   var h = board.settings.height = board.settings.numRows * board.settings.cellSize
-   var w = board.settings.width = board.settings.numCols * board.settings.cellSize
+   var h = board.config.height = board.config.numRows * board.config.cellSize
+   var w = board.config.width = board.config.numCols * board.config.cellSize
    board.d3 = d3.select(board.svgId)
      .attr("height", h)
      .attr("width", w)
  }
  viz.drawCells = function(board) {
-  var hlines = _.range(board.settings.numRows + 1)
-  var vlines = _.range(board.settings.numCols + 1)
-   var cellSize = board.settings.cellSize
+  var hlines = _.range(board.config.numRows + 1)
+  var vlines = _.range(board.config.numCols + 1)
+   var cellSize = board.config.cellSize
   board.d3.selectAll(".hline")
    .data(hlines)
    .enter().append("svg:line")
    .attr("x1", 0)
    .attr("y1", function(d){ return d * cellSize})
-   .attr("x2", board.settings.width)
+   .attr("x2", board.config.width)
    .attr("y2", function(d){ return d * cellSize})
    .attr("class", "pcGridLine")
   board.d3.selectAll(".vline")
@@ -569,10 +566,11 @@ PuzzleCode.viz = (function(){
    .attr("x1", function(d){ return d * cellSize})
    .attr("y1", 0)
    .attr("x2", function(d){ return d * cellSize})
-   .attr("y2", board.settings.height)
+   .attr("y2", board.config.height)
    .attr("class", "pcGridLine")
  }
  viz.init = function(board) {
+  board.viz = {}
   board.svgId = board.divId + "_svg"
   $(board.divId)
    .addClass("board")
@@ -586,16 +584,16 @@ PuzzleCode.viz = (function(){
 /**
  * Creates and returns new Board object.
  *
- * @param boardSettings should be a BoardSettings object
+ * @param boardConfig should be a BoardConfig object
  * @param divId should be the HTML id for an empty div. The visualization for
  * the board will be inserted into this div object 
  */
-PuzzleCode.init = function(boardSettings, divId) {
+PuzzleCode.init = function(boardConfig, divId) {
   "use strict"
- var defaultSettings = _.cloneDeep(PuzzleCode.board.DEFAULT_SETTINGS)
- var settings = _.merge(defaultSettings, boardSettings)
+ var defaultConfig = _.cloneDeep(PuzzleCode.board.DEFAULT_CONFIG)
+ var config = _.merge(defaultConfig, boardConfig)
  var board = {
-  settings: settings,
+  config: config,
   divId: divId,
  }
   PuzzleCode.viz.init(board)
@@ -606,7 +604,20 @@ var board2 = PuzzleCode.init({numCols: 6}, "#board2")
 PuzzleCode.sim = (function(){
   "use strict"
   var sim = {}
+  // Make one step in the simulation
  sim.step = function(board) {
+   // contains all data needed to visualize this step of the simulation
+   board.viz.step = {
+     // visualizations associated with the board, but not any particular bot
+     general: {},
+     // bots[bot.id] == an object containing all visualizations for that bot
+     // e.g. bot[1].lineIndex == the index of the line currently being
+     // executed for that bot with bot.id == 1
+     bot: {}
+   }
+   _(board.bots).forEach(function(bot) {
+     sim.dubstep(board, bot)
+   })
  }
  return sim
 })()
