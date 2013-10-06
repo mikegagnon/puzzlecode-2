@@ -9,6 +9,35 @@ PuzzleCode.sim = (function(){
 
   var sim = {}
 
+	/**
+	 * assumes relatively sane values for increment
+	 *
+	 * returns {
+	 *	value: (value + increment), wrapped around the torus if need be,
+	 *  torus: true iff the value wrapped around the edge
+	 * }
+	 *
+	 */
+	sim.wrapAdd = function(value, increment, outOfBounds) {
+	  value += increment
+	  if (value >= outOfBounds) {
+	    return {
+	    	value: value % outOfBounds,
+	    	torus: true
+	    }
+	  } else if (value < 0) {
+	    return {
+	    	value: outOfBounds + value,
+	    	torus: true
+	    }
+	  } else {
+	    return {
+	    	value: value,
+	    	torus: false
+	    }
+	  }
+	}
+
   // Make one step in the simulation
 	sim.step = function(board) {
 	

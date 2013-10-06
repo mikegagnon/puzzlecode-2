@@ -16,7 +16,7 @@ PuzzleCode.direction = (function(){
 	direction.DOWN = 1
 	direction.LEFT = 2
 	direction.RIGHT = 3
-	
+
 	direction.diretions = [
 		direction.UP,
 		direction.DOWN,
@@ -70,6 +70,23 @@ PuzzleCode.direction = (function(){
 
 	direction.oppositeDirection = function(dir) {
 	  return direction.rotateLeft(direction.rotateLeft(dir))
+	}
+
+	direction.dxdy = function(dir) {
+		var result = {dx: 0, dy: 0}
+		if (dir == direction.UP) {
+	    result.dy = -1
+	  } else if (dir == direction.DOWN) {
+	    result.dy = 1
+	  } else if (dir == direction.LEFT) {
+	    result.dx = -1
+	  } else if (dir == direction.RIGHT) {
+	    result.dx = 1
+	  } else {
+	    PuzzleCode.assert("this code shoudln't be reachable: dxdy",
+	    	function(){ return false })
+	  }
+	  return result
 	}
 
 	return direction

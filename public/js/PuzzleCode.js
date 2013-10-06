@@ -81,6 +81,22 @@ PuzzleCode.direction = (function(){
  direction.oppositeDirection = function(dir) {
    return direction.rotateLeft(direction.rotateLeft(dir))
  }
+ direction.dxdy = function(dir) {
+  var result = {dx: 0, dy: 0}
+  if (dir == direction.UP) {
+     result.dy = -1
+   } else if (dir == direction.DOWN) {
+     result.dy = 1
+   } else if (dir == direction.LEFT) {
+     result.dx = -1
+   } else if (dir == direction.RIGHT) {
+     result.dx = 1
+   } else {
+     PuzzleCode.assert("this code shoudln't be reachable: dxdy",
+      function(){ return false })
+   }
+   return result
+ }
  return direction
 })()
 PuzzleCode.compiler = (function(){
@@ -513,7 +529,6 @@ PuzzleCode.compiler = (function(){
     }
     return program
   }
-
   return compiler
 })()
 PuzzleCode.bot = (function(){
@@ -734,6 +749,34 @@ var board2 = PuzzleCode.init(config, "#board2")
 PuzzleCode.sim = (function(){
   "use strict"
   var sim = {}
+ /**
+	 * assumes relatively sane values for increment
+	 *
+	 * returns {
+	 *	value: (value + increment), wrapped around the torus if need be,
+	 *  torus: true iff the value wrapped around the edge
+	 * }
+	 *
+	 */
+ sim.wrapAdd = function(value, increment, outOfBounds) {
+   value += increment
+   if (value >= outOfBounds) {
+     return {
+      value: value % outOfBounds,
+      torus: true
+     }
+   } else if (value < 0) {
+     return {
+      value: outOfBounds + value,
+      torus: true
+     }
+   } else {
+     return {
+      value: value,
+      torus: false
+     }
+   }
+ }
   // Make one step in the simulation
  sim.step = function(board) {
    // contains all data needed to visualize this step of the simulation
@@ -1330,5 +1373,41 @@ var cases = [
 ]
 _(cases).forEach(function(tc){
  tc.output = direction.oppositeDirection(tc.direction)
+ test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+var sim = PuzzleCode.sim
+/******************************************************************************/
+TEST = "PuzzleCode.sim.wrapAdd"
+var cases = [
+ {
+  value: 1,
+  increment: 1,
+  outOfBounds: 3,
+  expectedOutput: {
+   value: 2,
+   torus: false
+  }
+ },
+ {
+  value: 2,
+  increment: 1,
+  outOfBounds: 3,
+  expectedOutput: {
+   value: 0,
+   torus: true
+  }
+ },
+ {
+  value: 0,
+  increment: -1,
+  outOfBounds: 3,
+  expectedOutput: {
+   value: 2,
+   torus: true
+  }
+ },
+]
+_(cases).forEach(function(tc){
+ tc.output = sim.wrapAdd(tc.value, tc.increment, tc.outOfBounds)
  test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })
