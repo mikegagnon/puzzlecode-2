@@ -119,9 +119,11 @@ PuzzleCode.compiler = (function(){
       },
 
       // true iff the program violates a constraint
-      constraintViolation: {type: "boolean"}
+      constraintViolation: {type: "boolean"},
+
+      error: {type: "boolean"}
     },
-    required: ["programText", "comments", "constraintViolation"]
+    required: ["programText", "comments", "constraintViolation", "error"]
   }
 
 #endif // #ifdef __DEBUG__
@@ -500,7 +502,8 @@ PuzzleCode.compiler = (function(){
     var program = {
       programText: programText,
       comments: comments,
-      constraintViolation: constraintViolation
+      constraintViolation: constraintViolation,
+      error: error
     }
 
     if (!error) {

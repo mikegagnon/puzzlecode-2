@@ -16,6 +16,13 @@ PuzzleCode.direction = (function(){
 	direction.DOWN = 1
 	direction.LEFT = 2
 	direction.RIGHT = 3
+	
+	direction.diretions = [
+		direction.UP,
+		direction.DOWN,
+		direction.LEFT,
+		direction.RIGHT,
+	]
 
 	/**
    * Functions

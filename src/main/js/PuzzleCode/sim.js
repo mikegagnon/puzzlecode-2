@@ -1,6 +1,9 @@
 #ifndef __SIM_JS__
 #define __SIM_JS__
 
+#include "main/js/PuzzleCode/header.js"
+#include "main/js/PuzzleCode/bot.js"
+
 PuzzleCode.sim = (function(){
   "use strict"
 

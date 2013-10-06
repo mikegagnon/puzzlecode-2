@@ -31,6 +31,12 @@ PuzzleCode.direction = (function(){
  direction.DOWN = 1
  direction.LEFT = 2
  direction.RIGHT = 3
+ direction.diretions = [
+  direction.UP,
+  direction.DOWN,
+  direction.LEFT,
+  direction.RIGHT,
+ ]
  /**
    * Functions
    ****************************************************************************/
@@ -167,9 +173,10 @@ PuzzleCode.compiler = (function(){
         additionalProperties: false
       },
       // true iff the program violates a constraint
-      constraintViolation: {type: "boolean"}
+      constraintViolation: {type: "boolean"},
+      error: {type: "boolean"}
     },
-    required: ["programText", "comments", "constraintViolation"]
+    required: ["programText", "comments", "constraintViolation", "error"]
   }
   /**
    * Compilation errors
@@ -470,7 +477,6 @@ PuzzleCode.compiler = (function(){
         }
       }
     })
-
     // ensure max_instructions is not exceeded
     if (!error && "max_instructions" in constraints) {
       var max_instructions = constraints.max_instructions
@@ -484,7 +490,6 @@ PuzzleCode.compiler = (function(){
         })
       }
     }
-
     // second pass: finalize GOTO statements
     _(instructions).forEach(function(instr){
       if (instr.opcode == compiler.Opcode.GOTO) {
@@ -498,21 +503,45 @@ PuzzleCode.compiler = (function(){
         }
       }
     })
-
     var program = {
       programText: programText,
       comments: comments,
-      constraintViolation: constraintViolation
+      constraintViolation: constraintViolation,
+      error: error
     }
-
     if (!error) {
       program.instructions = instructions
     }
-
     return program
   }
 
   return compiler
+})()
+PuzzleCode.bot = (function(){
+  "use strict"
+  var bot = {}
+  bot.Color = {
+    BLUE: 0,
+    RED: 1
+  }
+ /**
+   * Schemas for JSON objects
+   ****************************************************************************/
+  // A BotConfig object describes the configuration for a single bot
+  bot.BotConfigSchema = {
+    $schema: PuzzleCode.JSON_SCHEMA,
+    type: "object",
+    properties: {
+     color: {enum: _.values(bot.Color) },
+      x: {type: "integer"},
+      y: {type: "integer"},
+      facing: {enum: PuzzleCode.direction.diretions },
+      programText: {type: "string"},
+      constraints: {type: "object"}
+    },
+    required: ["color", "x", "y", "facing", "programText", "constraints"]
+  }
+ return bot
 })()
 PuzzleCode.board = (function(){
   "use strict"
@@ -520,7 +549,8 @@ PuzzleCode.board = (function(){
   board.DEFAULT_CONFIG = {
   numRows: 5,
   numCols: 10,
-  cellSize: 30
+  cellSize: 30,
+  bots: []
  }
  /**
    * Schemas for JSON objects
@@ -533,8 +563,12 @@ PuzzleCode.board = (function(){
      numRows: {type: "integer"},
      numCols: {type: "integer"},
      cellSize: {type: "integer"},
+     bots: {
+        type: "array",
+        items: PuzzleCode.bot.BotConfigSchema
+      },
     },
-    required: ["numRows", "numCols", "cellSize"]
+    required: ["numRows", "numCols", "cellSize", "bots"]
   }
  return board
 })()
@@ -592,15 +626,36 @@ PuzzleCode.init = function(boardConfig, divId) {
   "use strict"
  var defaultConfig = _.cloneDeep(PuzzleCode.board.DEFAULT_CONFIG)
  var config = _.merge(defaultConfig, boardConfig)
+ var error = false
+ _(config.bots).forEach(function(bot){
+  var program = PuzzleCode.compiler.compile(bot.programText, bot.constraints)
+  bot.program = program
+  error = error || program.error
+ })
  var board = {
   config: config,
   divId: divId,
+  // All elements in board are immutable, except for the state element
+  state: {
+   error: error
+  }
  }
   PuzzleCode.viz.init(board)
   return board
 }
-var board1 = PuzzleCode.init({}, "#board1")
-var board2 = PuzzleCode.init({numCols: 6}, "#board2")
+var config = {
+ bots: [
+    {
+      botColor: PuzzleCode.bot.Color.BLUE,
+      x: 2,
+      y: 3,
+      facing: PuzzleCode.direction.RIGHT,
+      programText: "move\nmove",
+      constraints: {}
+    },
+  ],
+}
+var board = PuzzleCode.init(config, "#board")
 PuzzleCode.sim = (function(){
   "use strict"
   var sim = {}
@@ -991,7 +1046,8 @@ var cases = [
     }
    ],
       comments: {},
-      constraintViolation: false
+      constraintViolation: false,
+      error: false,
     }
  },
  {
@@ -1007,7 +1063,8 @@ var cases = [
     }
    ],
       comments: {},
-      constraintViolation: false
+      constraintViolation: false,
+      error: false,
     }
  },
  {
@@ -1018,7 +1075,8 @@ var cases = [
       comments: {
        0: compiler.Error.invalidOpcode("mov")
       },
-      constraintViolation: false
+      constraintViolation: false,
+      error: true,
     }
  },
  {
@@ -1029,7 +1087,8 @@ var cases = [
       comments: {
        2: compiler.Error.invalidOpcode("mov")
       },
-      constraintViolation: false
+      constraintViolation: false,
+      error: true,
     }
  },
  {
@@ -1039,6 +1098,7 @@ var cases = [
    programText: "move\nfoo:move\ngoto foo",
       comments: {},
       constraintViolation: false,
+      error: false,
       instructions: [
     {
      opcode: compiler.Opcode.MOVE,
@@ -1069,6 +1129,7 @@ var cases = [
    programText: "\nmove\nmove",
       comments: {},
       constraintViolation: false,
+      error: false,
       instructions: [
         {
      opcode: compiler.Opcode.MOVE,
@@ -1095,6 +1156,7 @@ var cases = [
        4: compiler.Error.TOO_MANY_INSTRUCTIONS,
       },
       constraintViolation: true,
+      error: true,
     }
  },
 ]

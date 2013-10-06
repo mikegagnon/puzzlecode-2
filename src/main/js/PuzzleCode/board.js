@@ -2,6 +2,7 @@
 #define __BOARD_JS__
 
 #include "main/js/PuzzleCode/header.js"
+#include "main/js/PuzzleCode/bot.js"
 
 PuzzleCode.board = (function(){
   "use strict"
@@ -11,7 +12,8 @@ PuzzleCode.board = (function(){
   board.DEFAULT_CONFIG = {
 		numRows: 5,
 		numCols: 10,
-		cellSize: 30
+		cellSize: 30,
+		bots: []
 	}
 
 #ifdef __DEBUG__
@@ -27,8 +29,12 @@ PuzzleCode.board = (function(){
     	numRows: {type: "integer"},
     	numCols: {type: "integer"},
     	cellSize: {type: "integer"},
+    	bots: {
+        type: "array",
+        items: PuzzleCode.bot.BotConfigSchema
+      },
     },
-    required: ["numRows", "numCols", "cellSize"]
+    required: ["numRows", "numCols", "cellSize", "bots"]
   }
 
 #endif // #ifdef __DEBUG__

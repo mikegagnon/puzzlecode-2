@@ -387,7 +387,8 @@ var cases = [
 				}
 			],
       comments: {},
-      constraintViolation: false
+      constraintViolation: false,
+      error: false,
     }
 	},
 	{
@@ -403,7 +404,8 @@ var cases = [
 				}
 			],
       comments: {},
-      constraintViolation: false
+      constraintViolation: false,
+      error: false,
     }
 	},
 	{
@@ -414,7 +416,8 @@ var cases = [
       comments: {
       	0: compiler.Error.invalidOpcode("mov")
       },
-      constraintViolation: false
+      constraintViolation: false,
+      error: true,
     }
 	},
 	{
@@ -425,7 +428,8 @@ var cases = [
       comments: {
       	2: compiler.Error.invalidOpcode("mov")
       },
-      constraintViolation: false
+      constraintViolation: false,
+      error: true,
     }
 	},
 	{
@@ -435,6 +439,7 @@ var cases = [
 			programText: "move\nfoo:move\ngoto foo",
       comments: {},
       constraintViolation: false,
+      error: false,
       instructions: [
 				{
 					opcode: compiler.Opcode.MOVE,
@@ -465,6 +470,7 @@ var cases = [
 			programText: "\nmove\nmove",
       comments: {},
       constraintViolation: false,
+      error: false,
       instructions: [
         {
 					opcode: compiler.Opcode.MOVE,
@@ -491,6 +497,7 @@ var cases = [
       	4: compiler.Error.TOO_MANY_INSTRUCTIONS,
       },
       constraintViolation: true,
+      error: true,
     }
 	},
 ]
