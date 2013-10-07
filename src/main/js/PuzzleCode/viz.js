@@ -25,8 +25,8 @@ PuzzleCode.viz = (function(){
 
 	viz.drawCells = function(board) {
 
-		var hlines = _.range(board.config.height + 1)
-		var vlines = _.range(board.config.width + 1)
+		var hlines = _.range(1, board.config.height)
+		var vlines = _.range(1, board.config.width)
 
 	  var cellSize = board.config.cellSize
 
@@ -100,14 +100,29 @@ PuzzleCode.viz = (function(){
 
 		board.viz = {}
 
+		board.toolbarId = board.divId + "_toolbar"
+		board.playbackButtonsId = board.divId + "_playback_buttons"
 		board.svgId = board.divId + "_svg"
 
 		$(board.divId)
 			.addClass("pc-board")
+			.append("<div " +
+				      "id='" +  board.toolbarId.replace(/^#/, '') + "' " +
+						  "class='btn-toolbar'></div>")
 			.append("<svg " +
 							"class='pc-svg-board' "+
 							"id='" + board.svgId.replace(/^#/,'') + "' class='svgBoard' " +
 							"xmlns='http://www.w3.org/2000/svg'></svg>")
+
+		$(board.toolbarId)
+			.append("<div " +
+				      "id='" +  board.playbackButtonsId.replace(/^#/, '') + "' " +
+							"class='btn-group'></div>")
+
+		$(board.playbackButtonsId)
+			.append("<button type='button' class='btn btn-default'><span class='glyphicon glyphicon-refresh'></span></button>")
+			.append("<button type='button' class='btn btn-default'><span class='glyphicon glyphicon-step-forward'></span></button>")
+			.append("<button type='button' class='btn btn-default'><span class='glyphicon glyphicon-play'></span></button>")
 
 		viz.drawBoardContainer(board)
   	viz.drawCells(board)

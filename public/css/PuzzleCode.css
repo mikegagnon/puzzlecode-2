@@ -1,6 +1,7 @@
 .pc-grid-line {
-	stroke: #bbb;
+	stroke: rgb(204,204,204);
 	stroke-width: 1;
+  shape-rendering:crispEdges
 }
 .pc-board {
   margin-top: 10px;
@@ -9,9 +10,12 @@
   border-radius: 8px;
 }
 .pc-svg-board {
-  margin: 5px;
+  margin-top: 5px;
   background-color: #fff;
-  padding: 1px;
+  border-style: solid;
+  border-color: rgb(204,204,204);
+  border-width: 1px;
+  border-radius: 4px;
 }
 body {
   padding-top: 55px;
