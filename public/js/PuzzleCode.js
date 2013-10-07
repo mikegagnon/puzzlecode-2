@@ -11,6 +11,23 @@ var PuzzleCode = {
 
 
 }
+// yields a new width*height matrix
+// if defaultValue is a function then matrix[x][y] = defaultValue(x, y)
+// else matrix[x][y] = defaultValue
+PuzzleCode.newMatrix = function(width, height, defaultValue) {
+  "use strict"
+  return _.times(width, function(x) {
+    if (typeof defaultValue == "function") {
+      return _.times(height, function(y){
+        return defaultValue(x,y)
+      })
+    } else {
+      return _.times(height, function(){
+        return defaultValue
+      })
+    }
+  })
+}
 PuzzleCode.HELP_URL = "http://puzzlecode.org/help/"
 PuzzleCode.JSON_SCHEMA = "http://json-schema.org/draft-04/schema#"
 PuzzleCode.assert = function(message, func) {
@@ -546,25 +563,107 @@ PuzzleCode.bot = (function(){
     $schema: PuzzleCode.JSON_SCHEMA,
     type: "object",
     properties: {
-     color: {enum: _.values(bot.Color) },
       x: {type: "integer"},
       y: {type: "integer"},
+     color: {enum: _.values(bot.Color) },
       facing: {enum: PuzzleCode.direction.diretions },
       programText: {type: "string"},
       constraints: {type: "object"}
     },
-    required: ["color", "x", "y", "facing", "programText", "constraints"]
+    required: ["x", "y", "color", "facing", "programText", "constraints"]
   }
  return bot
 })()
+// yields a new width*height matrix
+// if defaultValue is a function then matrix[x][y] = defaultValue(x, y)
+// else matrix[x][y] = defaultValue
+PuzzleCode.newMatrix = function(width, height, defaultValue) {
+  "use strict"
+  return _.times(width, function(x) {
+    if (typeof defaultValue == "function") {
+      return _.times(height, function(y){
+        return defaultValue(x,y)
+      })
+    } else {
+      return _.times(height, function(){
+        return defaultValue
+      })
+    }
+  })
+}
 PuzzleCode.board = (function(){
   "use strict"
   var board = {}
+  // ensure the all the board invariants hold
+  board.check = function(board){
+    if (!PuzzleCode.DEBUG) {
+      return
+    }
+    PuzzleCode.assert("malformed board.config", function(){
+      return tv4.validate(board.config, PuzzleCode.board.BoardConfigSchema)
+    })
+    PuzzleCode.assert("board.bots does not match board.state", function(){
+      var matrixBots = []
+      _.times(board.config.width, function(x){
+        _.times(board.config.height, function(y){
+          if ("bot" in board.state.matrix[x][y]) {
+            var bot = board.state.matrix[x][y].bot
+            PuzzleCode.assert("bot / matrix disagree for bot.x",
+              function(){return bot.x == x})
+            PuzzleCode.assert("bot / matrix disagree for bot.y",
+              function(){return bot.y == y})
+            matrixBots.push(bot)
+          }
+        })
+      })
+      matrixBots = _.sortBy(matrixBots, function(bot){ return bot.id })
+      var match = _.isEqual(board.state.bots, matrixBots)
+      if (!match) {
+        console.error("board.state.bots")
+        console.dir(board.state.bots)
+        console.error("matrixBots")
+        console.dir(matrixBots)
+      }
+      return match
+    })
+  }
+  board.isEmptyCell = function(board, x, y) {
+    var cell = board.state.matrix[x][y]
+    if ("bot" in cell) {
+      return false
+    } else {
+      return true
+    }
+  }
+  board.newState = function(boardConfig) {
+    var state = {
+      error: false
+    }
+    // Create matrix
+    state.matrix = PuzzleCode.newMatrix(boardConfig.width, boardConfig.height,
+      function(){ return {} })
+    // Initialize bots
+    state.bots = _.cloneDeep(boardConfig.bots)
+    _(state.bots).forEach(function(bot, id){
+      bot.id = id
+      var program = PuzzleCode.compiler.compile(bot.programText, bot.constraints)
+      bot.program = program
+      state.error = state.error || program.error
+      PuzzleCode.assert("newState: bot.x bad", function(){
+        return bot.x >=0 && bot.x < boardConfig.width
+      })
+      PuzzleCode.assert("newState: bot.y bad", function(){
+        return bot.y >=0 && bot.y < boardConfig.height
+      })
+      state.matrix[bot.x][bot.y].bot = bot
+    })
+    return state
+  }
   board.DEFAULT_CONFIG = {
+    width: 10,
   height: 5,
-  width: 10,
   cellSize: 32,
-  bots: []
+    bots: [],
  }
  /**
    * Schemas for JSON objects
@@ -574,13 +673,13 @@ PuzzleCode.board = (function(){
     $schema: PuzzleCode.JSON_SCHEMA,
     type: "object",
     properties: {
+      width: {type: "integer"},
      height: {type: "integer"},
-     width: {type: "integer"},
      cellSize: {type: "integer"},
-     bots: {
+      bots: {
         type: "array",
         items: PuzzleCode.bot.BotConfigSchema
-      },
+      }
     },
     required: ["height", "width", "cellSize", "bots"]
   }
@@ -600,7 +699,6 @@ PuzzleCode.viz = (function(){
      .attr("width", w)
  }
  viz.drawCells = function(board) {
-  console.dir(board)
   var hlines = _.range(board.config.height + 1)
   var vlines = _.range(board.config.width + 1)
    var cellSize = board.config.cellSize
@@ -687,41 +785,20 @@ PuzzleCode.init = function(boardConfig, divId) {
   "use strict"
  var defaultConfig = _.cloneDeep(PuzzleCode.board.DEFAULT_CONFIG)
  var config = _.merge(defaultConfig, boardConfig)
- var error = false
- _(config.bots).forEach(function(bot, id){
-  bot.id = id
-  var program = PuzzleCode.compiler.compile(bot.programText, bot.constraints)
-  bot.program = program
-  error = error || program.error
- })
-  var matrix = _(boardConfig.width)
-    .range()
-    .map(function(x){
-      return _(boardConfig.height)
-        .range()
-        .map(function(y){
-          return {}
-        })
-        .value()
-    })
-    .value()
  var board = {
   config: config,
   divId: divId,
   // All elements in board are immutable, except for the state element
-  state: {
-   error: error,
-   bots: _.cloneDeep(config.bots),
-      matrix: matrix
-  }
+  state: PuzzleCode.board.newState(config)
  }
+  PuzzleCode.board.check(board)
   PuzzleCode.viz.init(board)
   return board
 }
 var config = {
  bots: [
     {
-      botColor: PuzzleCode.bot.Color.BLUE,
+      color: PuzzleCode.bot.Color.BLUE,
       x: 2,
       y: 3,
       facing: PuzzleCode.direction.UP,
@@ -729,7 +806,7 @@ var config = {
       constraints: {}
     },
     {
-      botColor: PuzzleCode.bot.Color.BLUE,
+      color: PuzzleCode.bot.Color.BLUE,
       x: 0,
       y: 0,
       facing: PuzzleCode.direction.LEFT,
@@ -740,10 +817,12 @@ var config = {
 }
 var board1 = PuzzleCode.init(config, "#board1")
 var config = {
- cellSize: 16,
+  width: 5,
+  height: 3,
+  cellSize: 16,
  bots: [
     {
-      botColor: PuzzleCode.bot.Color.BLUE,
+      color: PuzzleCode.bot.Color.BLUE,
       x: 0,
       y: 0,
       facing: PuzzleCode.direction.UP,
@@ -751,16 +830,16 @@ var config = {
       constraints: {}
     },
     {
-      botColor: PuzzleCode.bot.Color.BLUE,
+      color: PuzzleCode.bot.Color.BLUE,
       x: 3,
-      y: 3,
+      y: 2,
       facing: PuzzleCode.direction.LEFT,
       programText: "move",
       constraints: {}
     },
   ],
 }
-var board2 = PuzzleCode.init(config, "#board2")
+//var board2 = PuzzleCode.init(config, "#board2")
 PuzzleCode.sim = (function(){
   "use strict"
   var sim = {}
@@ -792,22 +871,51 @@ PuzzleCode.sim = (function(){
      }
    }
  }
- // a bot tries to move into cell x,y.
- // returns true if the bot is allowed to move in, false otherwise
- sim.tryMove = function(board, bot, x, y) {
-   // TODO: matching objects like this doesn't seem to to be the best idea.
-   // Instead, uild up a cell matrix or some other data structure
-   var matchingBlocks = _(board.blocks)
-     .filter( function(block) {
-       return block.x == x && block.y == y
-     })
-     .value()
-   var matchingBots = _(board.bots)
-     .filter( function(bot) {
-       return bot.cellX == x && bot.cellY == y
-     })
-     .value()
-   return matchingBlocks.length == 0 && matchingBots.length == 0
+ /**
+	 * executes the 'move' instruciton on the bot
+	 * updates the bot and board state
+	 * When a bot moves, it deposits two markers:
+	 *  - at the head in the old cell
+	 *  - at the tail in the new cell
+	 */
+ sim.executeMove = function(board, bot) {
+  var result = {viz: {}}
+   var prevX = bot.x
+   var prevY = bot.y
+   var delta = PuzzleCode.direction.dxdy(bot.facing)
+   var xResult = sim.wrapAdd(bot.x, delta.dx, board.config.width)
+   var yResult = sim.wrapAdd(bot.y, delta.dy, board.config.height)
+   var destX = xResult.value
+   var destY = yResult.value
+   var xTorus = xResult.torus
+   var yTorus = yResult.torus
+   // if the movement is blocked by an obstacle
+   if (!PuzzleCode.board.isEmptyCell(board, destX, destY)) {
+     result.viz.failMove = {
+       destX: bot.x + delta.dx,
+       destY: bot.y + delta.dy
+     }
+   }
+   // if the movement is NOT blocked
+   else {
+    delete board.state.matrix[prevX][prevY].bot
+    board.state.matrix[destX][destY].bot = bot
+     bot.x = destX
+     bot.y = destY
+     if (!xTorus && !yTorus) {
+       result.viz.nonTorusMove = true
+     } else {
+       result.viz.torusMove = {
+         prevX: prevX,
+         prevY: prevY,
+         oobPrevX: destX - delta.dx,
+         oobPrevY: destY - delta.dy,
+         oobNextX: prevX + delta.dx,
+         oobNextY: prevY + delta.dy
+       }
+     }
+   }
+   return result
  }
   // Make one step in the simulation
  sim.step = function(board) {
@@ -1441,5 +1549,130 @@ var cases = [
 ]
 _(cases).forEach(function(tc){
  tc.output = sim.wrapAdd(tc.value, tc.increment, tc.outOfBounds)
+ test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+/******************************************************************************/
+TEST = "PuzzleCode.sim.executeMove"
+var config = {
+ width: 5,
+ height: 3,
+ bots: [
+    {
+      color: PuzzleCode.bot.Color.BLUE,
+      x: 0,
+      y: 0,
+      facing: PuzzleCode.direction.RIGHT,
+      programText: "move",
+      constraints: {}
+    },
+    {
+      color: PuzzleCode.bot.Color.BLUE,
+      x: 2,
+      y: 0,
+      facing: PuzzleCode.direction.UP,
+      programText: "move",
+      constraints: {}
+    },
+    {
+      color: PuzzleCode.bot.Color.BLUE,
+      x: 4,
+      y: 0,
+      facing: PuzzleCode.direction.RIGHT,
+      programText: "move",
+      constraints: {}
+    },
+  ],
+}
+var board = PuzzleCode.init(config, "")
+var cases = [
+ {
+  board: _.cloneDeep(board),
+  bot: _.cloneDeep(board.state.matrix[0][0].bot),
+  prevX: 0,
+  prevY: 0,
+  destX: 1,
+  destY: 0,
+  expectedOutput: {
+   viz: {
+    nonTorusMove: true,
+   },
+  }
+ },
+ {
+  board: _.cloneDeep(board),
+  bot: _.cloneDeep(board.state.matrix[2][0].bot),
+  prevX: 2,
+  prevY: 0,
+  destX: 2,
+  destY: 2,
+  expectedOutput: {
+   viz: {
+    torusMove: {
+         prevX: 2,
+         prevY: 0,
+         oobPrevX: 2,
+         oobPrevY: 3,
+         oobNextX: 2,
+         oobNextY: -1
+       }
+     }
+  }
+ },
+ {
+  board: _.cloneDeep(board),
+  bot: _.cloneDeep(board.state.matrix[4][0].bot),
+  prevX: 4,
+  prevY: 0,
+  destX: 4,
+  destY: 0,
+  expectedOutput: {
+   viz: {
+    failMove: {
+        destX: 5,
+        destY: 0
+      }
+     }
+  }
+ },
+]
+_(cases).forEach(function(tc){
+ tc.output = sim.executeMove(tc.board, tc.bot)
+ test(tc, _.isEqual(tc.bot.x, tc.destX))
+ test(tc, _.isEqual(tc.bot.y, tc.destY))
+ test(tc, _.isEqual(tc.board.state.matrix[tc.bot.x][tc.bot.y].bot, tc.bot))
+ if (!(tc.prevX == tc.destX && tc.prevY == tc.destY)) {
+  test(tc, _.isEqual(tc.board.state.matrix[tc.prevX][tc.prevY], {}))
+ }
+ test(tc, _.isEqual(tc.output, tc.expectedOutput))
+})
+// yields a new width*height matrix
+// if defaultValue is a function then matrix[x][y] = defaultValue(x, y)
+// else matrix[x][y] = defaultValue
+PuzzleCode.newMatrix = function(width, height, defaultValue) {
+  "use strict"
+  return _.times(width, function(x) {
+    if (typeof defaultValue == "function") {
+      return _.times(height, function(y){
+        return defaultValue(x,y)
+      })
+    } else {
+      return _.times(height, function(){
+        return defaultValue
+      })
+    }
+  })
+}
+/******************************************************************************/
+TEST = "PuzzleCode.newMatrix"
+var cases = [
+ {
+  width: 3,
+  height: 2,
+  defaultValue: "a",
+  expectedOutput: [["a", "a"], ["a", "a"], ["a", "a"]]
+ },
+]
+_(cases).forEach(function(tc){
+ tc.output = PuzzleCode.newMatrix(tc.width, tc.height, tc.defaultValue)
  test(tc, _.isEqual(tc.output, tc.expectedOutput))
 })

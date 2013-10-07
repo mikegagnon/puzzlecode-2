@@ -20,38 +20,15 @@ PuzzleCode.init = function(boardConfig, divId) {
 	var defaultConfig = _.cloneDeep(PuzzleCode.board.DEFAULT_CONFIG)
 	var config = _.merge(defaultConfig, boardConfig)
 
-	var error = false
-
-	_(config.bots).forEach(function(bot, id){
-		bot.id = id
-		var program = PuzzleCode.compiler.compile(bot.programText, bot.constraints)
-		bot.program = program
-		error = error || program.error
-	})
-
-  var matrix = _(boardConfig.width)
-    .range()
-    .map(function(x){
-      return _(boardConfig.height)
-        .range()
-        .map(function(y){
-          return {}
-        })
-        .value()
-    })
-    .value()
-
 	var board = {
 		config: config,
 		divId: divId,
 
 		// All elements in board are immutable, except for the state element
-		state: {
-			error: error,
-			bots: _.cloneDeep(config.bots),
-      matrix: matrix
-		}
+		state: PuzzleCode.board.newState(config)
 	}
+
+  PuzzleCode.board.check(board)
 
   PuzzleCode.viz.init(board)
 
@@ -61,7 +38,7 @@ PuzzleCode.init = function(boardConfig, divId) {
 var config = {
 	bots: [
     {
-      botColor: PuzzleCode.bot.Color.BLUE,
+      color: PuzzleCode.bot.Color.BLUE,
       x: 2,
       y: 3,
       facing: PuzzleCode.direction.UP,
@@ -69,7 +46,7 @@ var config = {
       constraints: {}
     },
     {
-      botColor: PuzzleCode.bot.Color.BLUE,
+      color: PuzzleCode.bot.Color.BLUE,
       x: 0,
       y: 0,
       facing: PuzzleCode.direction.LEFT,
@@ -82,10 +59,12 @@ var config = {
 var board1 = PuzzleCode.init(config, "#board1")
 
 var config = {
-	cellSize: 16,
+  width: 5,
+  height: 3,
+  cellSize: 16,
 	bots: [
     {
-      botColor: PuzzleCode.bot.Color.BLUE,
+      color: PuzzleCode.bot.Color.BLUE,
       x: 0,
       y: 0,
       facing: PuzzleCode.direction.UP,
@@ -93,9 +72,9 @@ var config = {
       constraints: {}
     },
     {
-      botColor: PuzzleCode.bot.Color.BLUE,
+      color: PuzzleCode.bot.Color.BLUE,
       x: 3,
-      y: 3,
+      y: 2,
       facing: PuzzleCode.direction.LEFT,
       programText: "move",
       constraints: {}
@@ -103,6 +82,6 @@ var config = {
   ],
 }
 
-var board2 = PuzzleCode.init(config, "#board2")
+//var board2 = PuzzleCode.init(config, "#board2")
 
 #endif

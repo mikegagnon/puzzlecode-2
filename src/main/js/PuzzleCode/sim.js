@@ -38,26 +38,61 @@ PuzzleCode.sim = (function(){
 	  }
 	}
 
-	// a bot tries to move into cell x,y.
-	// returns true if the bot is allowed to move in, false otherwise
-	sim.tryMove = function(board, bot, x, y) {
-	  // TODO: matching objects like this doesn't seem to to be the best idea.
-	  // Instead, uild up a cell matrix or some other data structure
-	  var matchingBlocks = _(board.blocks)
-	    .filter( function(block) {
-	      return block.x == x && block.y == y
-	    })
-	    .value()
+	/**
+	 * executes the 'move' instruciton on the bot
+	 * updates the bot and board state
+	 * When a bot moves, it deposits two markers:
+	 *  - at the head in the old cell
+	 *  - at the tail in the new cell
+	 */
+	sim.executeMove = function(board, bot) {
 
-	  var matchingBots = _(board.bots)
-	    .filter( function(bot) {
-	      return bot.cellX == x && bot.cellY == y
-	    })
-	    .value()
+		var result = {viz: {}}
+ 
+	  var prevX = bot.x
+	  var prevY = bot.y
 
-	  return matchingBlocks.length == 0 && matchingBots.length == 0
+	 	var delta = PuzzleCode.direction.dxdy(bot.facing)
+
+	  var xResult = sim.wrapAdd(bot.x, delta.dx, board.config.width)
+	  var yResult = sim.wrapAdd(bot.y, delta.dy, board.config.height)
+	  var destX = xResult.value
+	  var destY = yResult.value
+	  var xTorus = xResult.torus
+	  var yTorus = yResult.torus
+
+	  // if the movement is blocked by an obstacle
+	  if (!PuzzleCode.board.isEmptyCell(board, destX, destY)) {
+	    result.viz.failMove = {
+	      destX: bot.x + delta.dx,
+	      destY: bot.y + delta.dy
+	    }
+	  }
+	  // if the movement is NOT blocked
+	  else {
+
+	  	delete board.state.matrix[prevX][prevY].bot
+	  	board.state.matrix[destX][destY].bot = bot
+
+	    bot.x = destX
+	    bot.y = destY
+	   
+	    if (!xTorus && !yTorus) {
+	      result.viz.nonTorusMove = true
+	    } else {
+	      result.viz.torusMove = {
+	        prevX: prevX,
+	        prevY: prevY,
+	        oobPrevX: destX - delta.dx,
+	        oobPrevY: destY - delta.dy,
+	        oobNextX: prevX + delta.dx, 
+	        oobNextY: prevY + delta.dy
+	      }
+	    }
+	  }
+
+	  return result
 	}
-
 
   // Make one step in the simulation
 	sim.step = function(board) {

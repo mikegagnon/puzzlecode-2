@@ -1,4 +1,5 @@
 
+#include "util.js"
 #include "compiler.js"
 #include "board.js"
 #include "viz.js"

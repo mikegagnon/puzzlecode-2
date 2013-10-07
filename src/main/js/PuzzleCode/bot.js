@@ -25,14 +25,14 @@ PuzzleCode.bot = (function(){
     $schema: PuzzleCode.JSON_SCHEMA,
     type: "object",
     properties: {
-    	color: {enum: _.values(bot.Color) },
       x: {type: "integer"},
       y: {type: "integer"},
+    	color: {enum: _.values(bot.Color) },
       facing: {enum: PuzzleCode.direction.diretions },
       programText: {type: "string"},
       constraints: {type: "object"}
     },
-    required: ["color", "x", "y", "facing", "programText", "constraints"]
+    required: ["x", "y", "color", "facing", "programText", "constraints"]
   }
 
 #endif // #ifdef __DEBUG__

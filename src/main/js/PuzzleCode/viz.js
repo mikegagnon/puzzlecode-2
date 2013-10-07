@@ -25,8 +25,6 @@ PuzzleCode.viz = (function(){
 
 	viz.drawCells = function(board) {
 
-		console.dir(board)
-
 		var hlines = _.range(board.config.height + 1)
 		var vlines = _.range(board.config.width + 1)
 
