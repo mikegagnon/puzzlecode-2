@@ -94,6 +94,49 @@ PuzzleCode.sim = (function(){
 	  return result
 	}
 
+	// a sub-step in the simulation
+	sim.dubstep = function(board, bot) {
+
+	  // make sure this bot hasn't finished
+	  if ("done" in bot.program) {
+	    return
+	  } 
+
+    PuzzleCode.assert(
+    	"dubstep: bot.ip >= 0 && bot.ip < bot.program.instructions.length",
+    	function() {
+    		return bot.ip >= 0 && bot.ip < bot.program.instructions.length 
+      })
+
+    var instruction = bot.program.instructions[bot.ip]
+
+    // NOTE: executing the goto instruction (and others) may modify the ip
+    bot.ip = bot.ip + 1
+
+    /**
+     * the executeFoo(...) functions return a result object that has two
+     * properties:
+     *		viz: 			an object describing the visualizations for this bot that
+     *							result from the execution of the instruction
+     *		markers:  array of markers deposited by the bot
+     */
+    var result
+
+    if (instruction.opcode == PuzzleCode.compiler.Opcode.MOVE) {
+      result = sim.executeMove(board, bot)
+    }
+
+    result.viz.lineIndex = instruction.lineIndex
+
+    if (bot.ip < bot.program.instructions.length) {
+      var nextInstruction = bot.program.instructions[bot.ip]
+      result.viz.nextLineIndex = nextInstruction.lineIndex
+    }
+
+	  board.viz.step.bot[bot.id] = result.viz
+
+	}
+
   // Make one step in the simulation
 	sim.step = function(board) {
 	
@@ -109,7 +152,7 @@ PuzzleCode.sim = (function(){
 	    bot: {}
 	  }
 
-	  _(board.bots).forEach(function(bot) {
+	  _(board.state.bots).forEach(function(bot) {
 	    sim.dubstep(board, bot)
 	  })
 

@@ -75,7 +75,13 @@ PuzzleCode.board = (function(){
     state.bots = _.cloneDeep(boardConfig.bots)
 
     _(state.bots).forEach(function(bot, id){
+
+      // Every bot has UUID (unique relative to the board object)
       bot.id = id
+
+      // instruction pointer into the bot's program (index into instructions)
+      bot.ip = 0
+
       var program = PuzzleCode.compiler.compile(bot.programText, bot.constraints)
       bot.program = program
       state.error = state.error || program.error
