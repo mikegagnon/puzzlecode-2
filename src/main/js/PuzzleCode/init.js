@@ -82,6 +82,6 @@ var config = {
   ],
 }
 
-//var board2 = PuzzleCode.init(config, "#board2")
+var board2 = PuzzleCode.init(config, "#board2")
 
 #endif

@@ -1,4 +1,21 @@
-.pcGridLine{
-	stroke: lightgray;
+.pc-grid-line {
+	stroke: #bbb;
 	stroke-width: 1;
+}
+.pc-board {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #eeeeee;
+  border-radius: 8px;
+}
+.pc-svg-board {
+  margin: 5px;
+  background-color: #fff;
+  padding: 1px;
+}
+body {
+  padding-top: 55px;
+}
+.starter-template {
+  padding: 40px 15px;
 }

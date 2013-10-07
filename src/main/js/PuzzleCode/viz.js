@@ -37,7 +37,7 @@ PuzzleCode.viz = (function(){
 			.attr("y1", function(d){ return d * cellSize})
 			.attr("x2", board.config.widthPixels)
 			.attr("y2", function(d){ return d * cellSize})
-			.attr("class", "pcGridLine")
+			.attr("class", "pc-grid-line")
 
 		board.d3.selectAll(".vline")
 			.data(vlines)
@@ -46,7 +46,7 @@ PuzzleCode.viz = (function(){
 			.attr("y1", 0)
 			.attr("x2", function(d){ return d * cellSize})
 			.attr("y2", board.config.heightPixels)
-			.attr("class", "pcGridLine")
+			.attr("class", "pc-grid-line")
 	}
 
 	viz.directionToAngle = function(dir) {
@@ -103,8 +103,10 @@ PuzzleCode.viz = (function(){
 		board.svgId = board.divId + "_svg"
 
 		$(board.divId)
-			.addClass("board")
-			.append("<svg id='" + board.svgId.replace(/^#/,'') + "' class='svgBoard' " +
+			.addClass("pc-board")
+			.append("<svg " +
+							"class='pc-svg-board' "+
+							"id='" + board.svgId.replace(/^#/,'') + "' class='svgBoard' " +
 							"xmlns='http://www.w3.org/2000/svg'></svg>")
 
 		viz.drawBoardContainer(board)

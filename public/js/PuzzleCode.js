@@ -712,7 +712,7 @@ PuzzleCode.viz = (function(){
    .attr("y1", function(d){ return d * cellSize})
    .attr("x2", board.config.widthPixels)
    .attr("y2", function(d){ return d * cellSize})
-   .attr("class", "pcGridLine")
+   .attr("class", "pc-grid-line")
   board.d3.selectAll(".vline")
    .data(vlines)
    .enter().append("svg:line")
@@ -720,7 +720,7 @@ PuzzleCode.viz = (function(){
    .attr("y1", 0)
    .attr("x2", function(d){ return d * cellSize})
    .attr("y2", board.config.heightPixels)
-   .attr("class", "pcGridLine")
+   .attr("class", "pc-grid-line")
  }
  viz.directionToAngle = function(dir) {
    if (dir == direction.UP) {
@@ -768,8 +768,10 @@ PuzzleCode.viz = (function(){
   board.viz = {}
   board.svgId = board.divId + "_svg"
   $(board.divId)
-   .addClass("board")
-   .append("<svg id='" + board.svgId.replace(/^#/,'') + "' class='svgBoard' " +
+   .addClass("pc-board")
+   .append("<svg " +
+       "class='pc-svg-board' "+
+       "id='" + board.svgId.replace(/^#/,'') + "' class='svgBoard' " +
        "xmlns='http://www.w3.org/2000/svg'></svg>")
   viz.drawBoardContainer(board)
    viz.drawCells(board)
@@ -842,7 +844,7 @@ var config = {
     },
   ],
 }
-//var board2 = PuzzleCode.init(config, "#board2")
+var board2 = PuzzleCode.init(config, "#board2")
 PuzzleCode.sim = (function(){
   "use strict"
   var sim = {}
