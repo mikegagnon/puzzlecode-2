@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" height="32" width="32">
 	<circle
-	  stroke="black"
+	  stroke="#173347"
+	  stroke-width="1"
 	  fill="steelblue"
 	  r="9"
 	  cx="16"
@@ -18,7 +19,7 @@
 	  <!-- outline the head -->
 	  <path
 	    d="M7 7 L17 7 M7 7 L7 17"
-	    stroke="black"
+	    stroke="#173347"
 	    stroke-width="1"
 	    fill="none" />
 	</g>
