@@ -14,9 +14,9 @@ PuzzleCode.viz = (function(){
 	viz.drawBoardContainer = function(board) {
 
 	  var h = board.config.heightPixels =
-	  	board.config.height * board.config.cellSize
+	  	board.viz.xScale(board.config.height)
 	 	var w = board.config.widthPixels =
-	 		board.config.width * board.config.cellSize
+	 		board.viz.yScale(board.config.width)
 
 	  board.d3 = d3.select(board.svgId)
 	    .attr("height", h)
@@ -28,23 +28,21 @@ PuzzleCode.viz = (function(){
 		var hlines = _.range(1, board.config.height)
 		var vlines = _.range(1, board.config.width)
 
-	  var cellSize = board.config.cellSize
-
 		board.d3.selectAll(".hline")
 			.data(hlines)
 			.enter().append("svg:line")
 			.attr("x1", 0)
-			.attr("y1", function(d){ return d * cellSize})
+			.attr("y1", board.viz.yScale)
 			.attr("x2", board.config.widthPixels)
-			.attr("y2", function(d){ return d * cellSize})
+			.attr("y2", board.viz.yScale)
 			.attr("class", "pc-grid-line")
 
 		board.d3.selectAll(".vline")
 			.data(vlines)
 			.enter().append("svg:line")
-			.attr("x1", function(d){ return d * cellSize})
+			.attr("x1", board.viz.xScale)
 			.attr("y1", 0)
-			.attr("x2", function(d){ return d * cellSize})
+			.attr("x2", board.viz.xScale)
 			.attr("y2", board.config.heightPixels)
 			.attr("class", "pc-grid-line")
 	}
@@ -76,8 +74,8 @@ PuzzleCode.viz = (function(){
 
 	// Like botTransformPixels, except using __cell__ position instead of __pixel__
 	viz.botTransform = function(board, bot) {
-	  var x = bot.x * board.config.cellSize
-	  var y = bot.y * board.config.cellSize
+	  var x = board.viz.xScale(bot.x)
+	  var y = board.viz.yScale(bot.y)
 	  return viz.botTransformPixels(board, x, y, bot.facing)
 	}
 
@@ -98,7 +96,20 @@ PuzzleCode.viz = (function(){
 
 	viz.init = function(board) {
 
+		var cellSize = board.config.cellSize
+		var width = board.config.width
+		var height = board.config.height
+
 		board.viz = {}
+
+		// translates column-number to the x-pixel of the left edge of that column
+		board.viz.xScale = d3.scale.linear()
+			.domain([0, width])
+			.range([0, width * cellSize])
+
+		board.viz.yScale = d3.scale.linear()
+			.domain([0, height])
+			.range([0, height * cellSize])
 
 		board.toolbarId = board.divId + "_toolbar"
 		board.playbackButtonsId = board.divId + "_playback_buttons"
