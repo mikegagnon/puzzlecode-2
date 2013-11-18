@@ -6,16 +6,25 @@
 #include "main/js/PuzzleCode/direction.js"
 #include "main/js/PuzzleCode/viz.js"
 #include "main/js/PuzzleCode/board.js"
+#include "main/js/PuzzleCode/buttons.js"
+
+// divMap[divId] == the board object for that div
+PuzzleCode.divMap = {}
 
 /**
  * Creates and returns new Board object.
  *
  * @param boardConfig should be a BoardConfig object
  * @param divId should be the HTML id for an empty div. The visualization for
- * the board will be inserted into this div object 
+ * the board will be inserted into this div object. It should already include
+ * the "#"
  */
 PuzzleCode.init = function(boardConfig, divId) {
   "use strict"
+
+  PuzzleCode.assert("board " + divId + " already exists", function(){
+    return !(divId in PuzzleCode.divMap)
+  })
 
 	var defaultConfig = _.cloneDeep(PuzzleCode.board.DEFAULT_CONFIG)
 	var config = _.merge(defaultConfig, boardConfig)
@@ -28,6 +37,8 @@ PuzzleCode.init = function(boardConfig, divId) {
 		state: PuzzleCode.board.newState(config)
 	}
 
+  PuzzleCode.divMap[divId] = board
+
   PuzzleCode.board.check(board)
 
   PuzzleCode.viz.init(board)
@@ -35,7 +46,11 @@ PuzzleCode.init = function(boardConfig, divId) {
   return board
 }
 
+/**
+ * Testing
+ ******************************************************************************/
 var config = {
+  buttons: ["play", "reset", "step"],
 	bots: [
     {
       color: PuzzleCode.bot.Color.BLUE,
@@ -59,6 +74,7 @@ var config = {
 var board1 = PuzzleCode.init(config, "#board1")
 
 var config = {
+  buttons: ["play"],
   width: 5,
   height: 3,
   cellSize: 16,
@@ -82,6 +98,6 @@ var config = {
   ],
 }
 
-//var board2 = PuzzleCode.init(config, "#board2")
+var board2 = PuzzleCode.init(config, "#board2")
 
 #endif

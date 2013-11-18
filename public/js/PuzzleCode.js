@@ -667,6 +667,7 @@ PuzzleCode.board = (function(){
   height: 5,
   cellSize: 32,
     bots: [],
+    buttons: []
  }
  /**
    * Schemas for JSON objects
@@ -679,6 +680,10 @@ PuzzleCode.board = (function(){
       width: {type: "integer"},
      height: {type: "integer"},
      cellSize: {type: "integer"},
+      buttons: {
+        type: "array",
+        items: "string"
+      },
       bots: {
         type: "array",
         items: PuzzleCode.bot.BotConfigSchema
@@ -763,6 +768,28 @@ PuzzleCode.viz = (function(){
      .attr("width", board.config.cellSize)
      .attr("transform", function(bot){ return viz.botTransform(board, bot) })
  }
+ viz.drawButtons = function(board) {
+  var buttonTemplate =
+   "<button type='button' class='btn btn-default' " +
+   "onclick=\"PuzzleCode.click('{{{buttonName}}}', '{{{boardDivId}}}')\" >" +
+   "<span class='glyphicon glyphicon-{{{glyph}}}'></span>" +
+   "</button>"
+  var buttonOrder = [
+   "reset",
+   "step",
+   "play"
+  ]
+  _(buttonOrder).forEach(function(buttonName){
+   if (_.contains(board.config.buttons, buttonName)) {
+    $(board.playbackButtonsId)
+     .append(Mustache.render(buttonTemplate, {
+      buttonName: buttonName,
+      glyph: PuzzleCode.buttons[buttonName].glyph,
+      boardDivId: board.divId
+     }))
+   }
+  })
+ }
  viz.init = function(board) {
   var cellSize = board.config.cellSize
   var width = board.config.width
@@ -791,25 +818,53 @@ PuzzleCode.viz = (function(){
    .append("<div " +
           "id='" + board.playbackButtonsId.replace(/^#/, '') + "' " +
        "class='btn-group'></div>")
-  $(board.playbackButtonsId)
-   .append("<button type='button' class='btn btn-default'><span class='glyphicon glyphicon-refresh'></span></button>")
-   .append("<button type='button' class='btn btn-default'><span class='glyphicon glyphicon-step-forward'></span></button>")
-   .append("<button type='button' class='btn btn-default'><span class='glyphicon glyphicon-play'></span></button>")
+  viz.drawButtons(board)
   viz.drawBoardContainer(board)
    viz.drawCells(board)
    viz.drawBots(board)
  }
   return viz
 })()
+PuzzleCode.buttons = {}
+PuzzleCode.buttons["play"] = {
+ glyph: "play",
+ fn: function(board) {
+  "use strict"
+  console.log("play")
+  console.dir(board)
+ }
+}
+PuzzleCode.buttons["step"] = {
+ glyph: "step-forward",
+ fn: function(board) {
+  "use strict"
+  console.log("step-forward")
+  console.dir(board)
+ }
+}
+PuzzleCode.buttons["reset"] = {
+ glyph: "refresh",
+ fn: function(board) {
+  "use strict"
+  console.log("reset")
+  console.dir(board)
+ }
+}
+// divMap[divId] == the board object for that div
+PuzzleCode.divMap = {}
 /**
  * Creates and returns new Board object.
  *
  * @param boardConfig should be a BoardConfig object
  * @param divId should be the HTML id for an empty div. The visualization for
- * the board will be inserted into this div object 
+ * the board will be inserted into this div object. It should already include
+ * the "#"
  */
 PuzzleCode.init = function(boardConfig, divId) {
   "use strict"
+  PuzzleCode.assert("board " + divId + " already exists", function(){
+    return !(divId in PuzzleCode.divMap)
+  })
  var defaultConfig = _.cloneDeep(PuzzleCode.board.DEFAULT_CONFIG)
  var config = _.merge(defaultConfig, boardConfig)
  var board = {
@@ -818,11 +873,16 @@ PuzzleCode.init = function(boardConfig, divId) {
   // All elements in board are immutable, except for the state element
   state: PuzzleCode.board.newState(config)
  }
+  PuzzleCode.divMap[divId] = board
   PuzzleCode.board.check(board)
   PuzzleCode.viz.init(board)
   return board
 }
+/**
+ * Testing
+ ******************************************************************************/
 var config = {
+  buttons: ["play", "reset", "step"],
  bots: [
     {
       color: PuzzleCode.bot.Color.BLUE,
@@ -844,6 +904,7 @@ var config = {
 }
 var board1 = PuzzleCode.init(config, "#board1")
 var config = {
+  buttons: ["play"],
   width: 5,
   height: 3,
   cellSize: 16,
@@ -866,7 +927,13 @@ var config = {
     },
   ],
 }
-//var board2 = PuzzleCode.init(config, "#board2")
+var board2 = PuzzleCode.init(config, "#board2")
+PuzzleCode.click = function(buttonName, divId) {
+  "use strict"
+  var board = PuzzleCode.divMap[divId]
+  var fn = PuzzleCode.buttons[buttonName].fn
+  fn(board);
+}
 PuzzleCode.sim = (function(){
   "use strict"
   var sim = {}

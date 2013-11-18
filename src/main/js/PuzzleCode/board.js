@@ -104,6 +104,7 @@ PuzzleCode.board = (function(){
 		height: 5,
 		cellSize: 32,
     bots: [],
+    buttons: []
 	}
 
 #ifdef __DEBUG__
@@ -119,6 +120,10 @@ PuzzleCode.board = (function(){
       width: {type: "integer"},
     	height: {type: "integer"},
     	cellSize: {type: "integer"},
+      buttons: {
+        type: "array",
+        items: "string"
+      },
       bots: {
         type: "array",
         items: PuzzleCode.bot.BotConfigSchema

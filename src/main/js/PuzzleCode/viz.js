@@ -94,6 +94,32 @@ PuzzleCode.viz = (function(){
 	    .attr("transform", function(bot){ return viz.botTransform(board, bot) })
 	}
 
+	viz.drawButtons = function(board) {
+
+		var buttonTemplate =
+			"<button type='button' class='btn btn-default' " +
+			"onclick=\"PuzzleCode.click('{{{buttonName}}}', '{{{boardDivId}}}')\" >" +
+			"<span class='glyphicon glyphicon-{{{glyph}}}'></span>"  +
+			"</button>"
+
+		var buttonOrder = [
+			"reset",
+			"step",
+			"play"
+		]
+
+		_(buttonOrder).forEach(function(buttonName){
+			if (_.contains(board.config.buttons, buttonName)) {
+				$(board.playbackButtonsId)
+					.append(Mustache.render(buttonTemplate, {
+						buttonName: buttonName,
+						glyph: PuzzleCode.buttons[buttonName].glyph,
+						boardDivId: board.divId
+					}))
+			}
+		})
+	}
+
 	viz.init = function(board) {
 
 		var cellSize = board.config.cellSize
@@ -130,11 +156,7 @@ PuzzleCode.viz = (function(){
 				      "id='" +  board.playbackButtonsId.replace(/^#/, '') + "' " +
 							"class='btn-group'></div>")
 
-		$(board.playbackButtonsId)
-			.append("<button type='button' class='btn btn-default'><span class='glyphicon glyphicon-refresh'></span></button>")
-			.append("<button type='button' class='btn btn-default'><span class='glyphicon glyphicon-step-forward'></span></button>")
-			.append("<button type='button' class='btn btn-default'><span class='glyphicon glyphicon-play'></span></button>")
-
+		viz.drawButtons(board)
 		viz.drawBoardContainer(board)
   	viz.drawCells(board)
   	viz.drawBots(board)
