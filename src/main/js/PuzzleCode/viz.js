@@ -210,7 +210,6 @@ PuzzleCode.viz = (function(){
 		    .attr("xlink:href", "img/bluebot.svg")
 		    .attr("height", board.config.cellSize)
 		    .attr("width", board.config.cellSize)
-		    //.attr("transform", function(bot){ return viz.botTransform(board, bot) })
 		    .attr("transform", function(bot) {
 	        return viz.botTransform(board, {
 	            x: torusMove.prevX,
@@ -218,18 +217,6 @@ PuzzleCode.viz = (function(){
 	            facing: bot.facing
 	          })
 	      })
-	      /*.append("svg:use")
-	      // The clone starts at the previous location of the bot
-	      .attr("id", cloneBotId)
-	      .attr("class", "bot")
-	      .attr("xlink:href", "#botTemplate")
-	      .attr("transform", function(bot) {
-	        return botTransform({
-	            cellX: torusMove.prevX,
-	            cellY: torusMove.prevY,
-	            facing: bot.facing
-	          })
-	      })*/
 	      .transition()
 	      // the clone slides out of view
 	      .attr("transform", function(bot) {
