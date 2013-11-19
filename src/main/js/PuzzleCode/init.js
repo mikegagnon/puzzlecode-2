@@ -55,6 +55,14 @@ var config = {
     {
       color: PuzzleCode.bot.Color.BLUE,
       x: 2,
+      y: 1,
+      facing: PuzzleCode.direction.RIGHT,
+      programText: "",
+      constraints: {}
+    },
+    {
+      color: PuzzleCode.bot.Color.BLUE,
+      x: 2,
       y: 3,
       facing: PuzzleCode.direction.UP,
       programText: "move\nmove\nmove\nmove",

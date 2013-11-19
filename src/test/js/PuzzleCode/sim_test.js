@@ -132,7 +132,8 @@ var cases = [
 ]
 
 _(cases).forEach(function(tc){
-	tc.output = sim.executeMove(tc.board, tc.bot)
+  var result = {viz:{}}
+	tc.output = sim.executeMove(result, tc.board, tc.bot)
 	test(tc, _.isEqual(tc.bot.x, tc.destX))
 	test(tc, _.isEqual(tc.bot.y, tc.destY))
 	test(tc, _.isEqual(tc.board.state.matrix[tc.bot.x][tc.bot.y].bot, tc.bot))

@@ -45,9 +45,7 @@ PuzzleCode.sim = (function(){
 	 *  - at the head in the old cell
 	 *  - at the tail in the new cell
 	 */
-	sim.executeMove = function(board, bot) {
-
-		var result = {viz: {}}
+	sim.executeMove = function(result, board, bot) {
  
 	  var prevX = bot.x
 	  var prevY = bot.y
@@ -113,42 +111,47 @@ PuzzleCode.sim = (function(){
 	  // make sure this bot hasn't finished
 	  if ("done" in bot.program) {
 	    return
-	  } 
-
-    PuzzleCode.assert(
-    	"dubstep: bot.ip >= 0 && bot.ip < bot.program.instructions.length",
-    	function() {
-    		return bot.ip >= 0 && bot.ip < bot.program.instructions.length 
-      })
-
-    var instruction = bot.program.instructions[bot.ip]
-
-    // NOTE: executing the goto instruction (and others) may modify the ip
-    bot.ip = bot.ip + 1
+	  }
 
     /**
      * the executeFoo(...) functions return a result object that has two
      * properties:
-     *		viz: 			an object describing the visualizations for this bot that
-     *							result from the execution of the instruction
-     *		markers:  array of markers deposited by the bot
+     *    viz:      an object describing the visualizations for this bot that
+     *              result from the execution of the instruction
+     *    markers:  array of markers deposited by the bot
      */
-    var result
+    var result = {viz: {}}
 
-    if (instruction.opcode == PuzzleCode.compiler.Opcode.MOVE) {
-      result = sim.executeMove(board, bot)
-    }
-
-    result.viz.lineIndex = instruction.lineIndex
-
-    if (bot.ip < bot.program.instructions.length) {
-      var nextInstruction = bot.program.instructions[bot.ip]
-      result.viz.nextLineIndex = nextInstruction.lineIndex
-    }
-
-    // if the bot has reached the end of its program
-    if (bot.ip >= bot.program.instructions.length) {
+    // if the bot has an empty program
+    if (bot.program.instructions.length == 0) {
       sim.botDone(result, animationSpec, board, bot)
+    } else {
+      PuzzleCode.assert(
+        "dubstep: bot.ip >= 0 && bot.ip < bot.program.instructions.length",
+        function() {
+          return bot.ip >= 0 && bot.ip < bot.program.instructions.length
+        })
+
+      var instruction = bot.program.instructions[bot.ip]
+
+      // NOTE: executing the goto instruction (and others) may modify the ip
+      bot.ip = bot.ip + 1
+
+      if (instruction.opcode == PuzzleCode.compiler.Opcode.MOVE) {
+        sim.executeMove(result, board, bot)
+      }
+
+      result.viz.lineIndex = instruction.lineIndex
+
+      if (bot.ip < bot.program.instructions.length) {
+        var nextInstruction = bot.program.instructions[bot.ip]
+        result.viz.nextLineIndex = nextInstruction.lineIndex
+      }
+
+      // if the bot has reached the end of its program
+      if (bot.ip >= bot.program.instructions.length) {
+        sim.botDone(result, animationSpec, board, bot)
+      }
     }
 
 	  animationSpec.bot[bot.id] = result.viz
