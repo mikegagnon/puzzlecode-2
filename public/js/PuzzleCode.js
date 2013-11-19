@@ -594,6 +594,10 @@ PuzzleCode.newMatrix = function(width, height, defaultValue) {
 PuzzleCode.board = (function(){
   "use strict"
   var board = {}
+  board.PlayState = {
+    PAUSED: 0,
+    PLAYING: 1
+  }
   // ensure the all the board invariants hold
   board.check = function(board){
     if (!PuzzleCode.DEBUG) {
@@ -639,6 +643,7 @@ PuzzleCode.board = (function(){
     var state = {
       error: false
     }
+    state.playState = board.PlayState.PAUSED
     // Create matrix
     state.matrix = PuzzleCode.newMatrix(boardConfig.width, boardConfig.height,
       function(){ return {} })
@@ -663,6 +668,7 @@ PuzzleCode.board = (function(){
     return state
   }
   board.DEFAULT_CONFIG = {
+    animationStyle: "Normal",
     width: 10,
   height: 5,
   cellSize: 32,
@@ -677,6 +683,7 @@ PuzzleCode.board = (function(){
     $schema: PuzzleCode.JSON_SCHEMA,
     type: "object",
     properties: {
+      animationStyle: {enum: ["Normal"] },
       width: {type: "integer"},
      height: {type: "integer"},
      cellSize: {type: "integer"},
@@ -697,6 +704,13 @@ PuzzleCode.viz = (function(){
   "use strict"
   var direction = PuzzleCode.direction
   var viz = {}
+  viz.AnimationSpeed = {
+   "Normal": {
+    duration: 400,
+    delay: 600,
+    easing: "cubic-in-out"
+   }
+  }
  viz.drawBoardContainer = function(board) {
    var h = board.config.heightPixels =
     board.viz.xScale(board.config.height)
@@ -790,11 +804,76 @@ PuzzleCode.viz = (function(){
    }
   })
  }
+ /**
+	 * Returns a lodash collection containing "viz objects" for bots
+	 * that have the visualizeKey. A "viz object" is an object like: {
+	 *    viz: board.visualize.step.bot[bot.id][visualizeKey] 
+	 *    bot: the bot
+	 * }
+	 */
+ viz.getViz = function(animationSpec, board, visualizeKey) {
+   var x = _(board.state.bots)
+     .filter(function(bot){
+       return bot.id in animationSpec.bot &&
+         visualizeKey in animationSpec.bot[bot.id]
+     })
+     .map(function(bot) {
+       return {
+         viz: animationSpec.bot[bot.id][visualizeKey],
+         bot: bot
+       }
+     })
+   return x
+ }
+ /**
+	 * For each bot with the specified visualization, execute:
+	 *    fn(viz, bot)
+	 * where:
+	 *   viz == board.visualize.step.bot[bot.id][visualizeKey]
+	 */
+ viz.visualizeBot = function(animationSpec, board, visualizeKey, fn) {
+   viz.getViz(animationSpec, board, visualizeKey)
+     .forEach(function(v) {
+       fn(v.viz, v.bot)
+     })
+ }
+ /**
+	 * For each bot with the specified visualization, execute:
+	 *    fn(transition, viz, bot)
+	 * where:
+	 *   transition is a d3 transition with only that bot selected
+	 *   viz == board.visualize.step.bot[bot.id][visualizeKey]
+	 * IMPORTANT NOTE: It seems that there can only be ONE transition on a bot
+	 * at a time, due to D3. Even if two transitions produce completely different
+	 * effects, it seems that merely selecting the same bot twice causes trouble.
+	 * Only use transitionBot if you are sure it is for an exclusive animation of
+	 * the bot. You can use visualizeBot() to evade this limitation.
+	 */
+ viz.transitionBot = function(animationSpec, board, visualizeKey, fn) {
+   viz.visualizeBot(animationSpec, board, visualizeKey, function(vizz, bot) {
+     var transition = d3.select("#" + viz.botId(board, bot)).transition()
+     fn(transition, vizz, bot)
+   })
+ }
+  viz.animateMoveNonTorus = function(animationSpec, board) {
+   viz.transitionBot(animationSpec, board, "nonTorusMove", function(transition) {
+     transition
+       .attr("transform", function(bot){
+        return viz.botTransform(board, bot)
+       })
+       .ease(board.viz.animationSpeed.easing)
+       .duration(board.viz.animationSpeed.duration)
+   })
+  }
+ viz.animateStep = function(animationSpec, board) {
+  viz.animateMoveNonTorus(animationSpec, board)
+ }
  viz.init = function(board) {
   var cellSize = board.config.cellSize
   var width = board.config.width
   var height = board.config.height
   board.viz = {}
+  board.viz.animationSpeed = viz.AnimationSpeed[board.config.animationStyle]
   // translates column-number to the x-pixel of the left edge of that column
   board.viz.xScale = d3.scale.linear()
    .domain([0, width])
@@ -838,8 +917,10 @@ PuzzleCode.buttons["step"] = {
  glyph: "step-forward",
  fn: function(board) {
   "use strict"
-  console.log("step-forward")
-  console.dir(board)
+  if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
+   var animationSpec = PuzzleCode.sim.step(board)
+   PuzzleCode.viz.animateStep(animationSpec, board)
+  }
  }
 }
 PuzzleCode.buttons["reset"] = {
@@ -889,7 +970,7 @@ var config = {
       x: 2,
       y: 3,
       facing: PuzzleCode.direction.UP,
-      programText: "move\nmove",
+      programText: "move\nmove\nmove\nmove",
       constraints: {}
     },
     {
@@ -897,14 +978,14 @@ var config = {
       x: 0,
       y: 0,
       facing: PuzzleCode.direction.LEFT,
-      programText: "move",
+      programText: "move\nmove\nmove\nmove",
       constraints: {}
     },
   ],
 }
 var board1 = PuzzleCode.init(config, "#board1")
 var config = {
-  buttons: ["play"],
+  buttons: ["play", "step"],
   width: 5,
   height: 3,
   cellSize: 16,
@@ -1011,8 +1092,19 @@ PuzzleCode.sim = (function(){
    }
    return result
  }
+  sim.botDone = function(result, animationSpec, board, bot) {
+    bot.program.done = true
+    result.viz.programDone = true
+    // TODO only set encourage_reset if it's sensible.
+    // Right now, if any bot's program finishes encourage_reset will be
+    // activated.
+    // Perhaps the best thing is have each puzzle define a function that
+    // analyzes the board and determines whether or not a reset should be
+    // encouraged
+    animationSpec.general.encourage_reset = true
+  }
  // a sub-step in the simulation
- sim.dubstep = function(board, bot) {
+ sim.dubstep = function(animationSpec, board, bot) {
    // make sure this bot hasn't finished
    if ("done" in bot.program) {
      return
@@ -1041,12 +1133,16 @@ PuzzleCode.sim = (function(){
       var nextInstruction = bot.program.instructions[bot.ip]
       result.viz.nextLineIndex = nextInstruction.lineIndex
     }
-   board.viz.step.bot[bot.id] = result.viz
+    // if the bot has reached the end of its program
+    if (bot.ip >= bot.program.instructions.length) {
+      sim.botDone(result, animationSpec, board, bot)
+    }
+   animationSpec.bot[bot.id] = result.viz
  }
   // Make one step in the simulation
  sim.step = function(board) {
    // contains all data needed to visualize this step of the simulation
-   board.viz.step = {
+   var animationSpec = {
      // visualizations associated with the board, but not any particular bot
      general: {},
      // bots[bot.id] == an object containing all visualizations for that bot
@@ -1055,8 +1151,9 @@ PuzzleCode.sim = (function(){
      bot: {}
    }
    _(board.state.bots).forEach(function(bot) {
-     sim.dubstep(board, bot)
+     sim.dubstep(animationSpec, board, bot)
    })
+    return animationSpec
  }
  return sim
 })()

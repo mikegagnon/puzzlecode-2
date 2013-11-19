@@ -57,7 +57,7 @@ var config = {
       x: 2,
       y: 3,
       facing: PuzzleCode.direction.UP,
-      programText: "move\nmove",
+      programText: "move\nmove\nmove\nmove",
       constraints: {}
     },
     {
@@ -65,7 +65,7 @@ var config = {
       x: 0,
       y: 0,
       facing: PuzzleCode.direction.LEFT,
-      programText: "move",
+      programText: "move\nmove\nmove\nmove",
       constraints: {}
     },
   ],
@@ -74,7 +74,7 @@ var config = {
 var board1 = PuzzleCode.init(config, "#board1")
 
 var config = {
-  buttons: ["play"],
+  buttons: ["play", "step"],
   width: 5,
   height: 3,
   cellSize: 16,

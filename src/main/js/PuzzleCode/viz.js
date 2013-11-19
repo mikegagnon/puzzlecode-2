@@ -11,6 +11,14 @@ PuzzleCode.viz = (function(){
   var direction = PuzzleCode.direction
   var viz = {}
 
+  viz.AnimationSpeed = {
+  	"Normal": {
+  		duration: 400,
+  		delay: 600,
+  		easing: "cubic-in-out"	
+  	}
+  }
+
 	viz.drawBoardContainer = function(board) {
 
 	  var h = board.config.heightPixels =
@@ -120,6 +128,75 @@ PuzzleCode.viz = (function(){
 		})
 	}
 
+	/**
+	 * Returns a lodash collection containing "viz objects" for bots
+	 * that have the visualizeKey. A "viz object" is an object like: {
+	 *    viz: board.visualize.step.bot[bot.id][visualizeKey] 
+	 *    bot: the bot
+	 * }
+	 */
+	viz.getViz = function(animationSpec, board, visualizeKey) {
+	  var x = _(board.state.bots)
+	    .filter(function(bot){
+	      return bot.id in animationSpec.bot &&
+	        visualizeKey in animationSpec.bot[bot.id]
+	    })
+	    .map(function(bot) {
+	      return {
+	        viz: animationSpec.bot[bot.id][visualizeKey],
+	        bot: bot
+	      }
+	    })
+	  return x
+	}
+
+	/**
+	 * For each bot with the specified visualization, execute:
+	 *    fn(viz, bot)
+	 * where:
+	 *   viz == board.visualize.step.bot[bot.id][visualizeKey]
+	 */
+	viz.visualizeBot = function(animationSpec, board, visualizeKey, fn) {
+	  viz.getViz(animationSpec, board, visualizeKey)
+	    .forEach(function(v) {
+	      fn(v.viz, v.bot)
+	    })
+	}
+
+	/**
+	 * For each bot with the specified visualization, execute:
+	 *    fn(transition, viz, bot)
+	 * where:
+	 *   transition is a d3 transition with only that bot selected
+	 *   viz == board.visualize.step.bot[bot.id][visualizeKey]
+	 * IMPORTANT NOTE: It seems that there can only be ONE transition on a bot
+	 * at a time, due to D3. Even if two transitions produce completely different
+	 * effects, it seems that merely selecting the same bot twice causes trouble.
+	 * Only use transitionBot if you are sure it is for an exclusive animation of
+	 * the bot. You can use visualizeBot() to evade this limitation.
+	 */
+	viz.transitionBot = function(animationSpec, board, visualizeKey, fn) {
+	  viz.visualizeBot(animationSpec, board, visualizeKey, function(vizz, bot) {
+	    var transition = d3.select("#" + viz.botId(board, bot)).transition()
+	    fn(transition, vizz, bot)
+	  })
+	}
+
+  viz.animateMoveNonTorus = function(animationSpec, board) {
+	  viz.transitionBot(animationSpec, board, "nonTorusMove", function(transition) {
+	    transition
+	      .attr("transform", function(bot){
+	      	return viz.botTransform(board, bot)
+	      })
+	      .ease(board.viz.animationSpeed.easing)
+	      .duration(board.viz.animationSpeed.duration)
+	  })
+  }
+
+	viz.animateStep = function(animationSpec, board) {
+		viz.animateMoveNonTorus(animationSpec, board)
+	}
+
 	viz.init = function(board) {
 
 		var cellSize = board.config.cellSize
@@ -127,6 +204,8 @@ PuzzleCode.viz = (function(){
 		var height = board.config.height
 
 		board.viz = {}
+
+		board.viz.animationSpeed = viz.AnimationSpeed[board.config.animationStyle]
 
 		// translates column-number to the x-pixel of the left edge of that column
 		board.viz.xScale = d3.scale.linear()

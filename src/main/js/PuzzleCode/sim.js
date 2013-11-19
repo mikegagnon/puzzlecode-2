@@ -94,8 +94,21 @@ PuzzleCode.sim = (function(){
 	  return result
 	}
 
+  sim.botDone = function(result, animationSpec, board, bot) {
+    bot.program.done = true
+    result.viz.programDone = true
+
+    // TODO only set encourage_reset if it's sensible.
+    // Right now, if any bot's program finishes encourage_reset will be
+    // activated.
+    // Perhaps the best thing is have each puzzle define a function that
+    // analyzes the board and determines whether or not a reset should be
+    // encouraged
+    animationSpec.general.encourage_reset = true
+  }
+
 	// a sub-step in the simulation
-	sim.dubstep = function(board, bot) {
+	sim.dubstep = function(animationSpec, board, bot) {
 
 	  // make sure this bot hasn't finished
 	  if ("done" in bot.program) {
@@ -133,15 +146,19 @@ PuzzleCode.sim = (function(){
       result.viz.nextLineIndex = nextInstruction.lineIndex
     }
 
-	  board.viz.step.bot[bot.id] = result.viz
+    // if the bot has reached the end of its program
+    if (bot.ip >= bot.program.instructions.length) {
+      sim.botDone(result, animationSpec, board, bot)
+    }
 
+	  animationSpec.bot[bot.id] = result.viz
 	}
 
   // Make one step in the simulation
 	sim.step = function(board) {
 	
 	  // contains all data needed to visualize this step of the simulation
-	  board.viz.step = {
+	  var animationSpec = {
 
 	    // visualizations associated with the board, but not any particular bot
 	    general: {},
@@ -153,9 +170,10 @@ PuzzleCode.sim = (function(){
 	  }
 
 	  _(board.state.bots).forEach(function(bot) {
-	    sim.dubstep(board, bot)
+	    sim.dubstep(animationSpec, board, bot)
 	  })
 
+    return animationSpec
 	}
 
 	return sim

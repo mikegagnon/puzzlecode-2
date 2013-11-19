@@ -19,8 +19,10 @@ PuzzleCode.buttons["step"] = {
 	glyph: "step-forward",
 	fn: function(board) {
 		"use strict"
-		console.log("step-forward")
-		console.dir(board)
+		if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
+			var animationSpec = PuzzleCode.sim.step(board)
+			PuzzleCode.viz.animateStep(animationSpec, board)
+		}
 	}
 }
 

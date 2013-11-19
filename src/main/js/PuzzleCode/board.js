@@ -10,6 +10,11 @@ PuzzleCode.board = (function(){
 
   var board = {}
 
+  board.PlayState = {
+    PAUSED: 0,
+    PLAYING: 1
+  }
+
   // ensure the all the board invariants hold
   board.check = function(board){
     if (!PuzzleCode.DEBUG) {
@@ -67,6 +72,8 @@ PuzzleCode.board = (function(){
       error: false
     }
 
+    state.playState = board.PlayState.PAUSED
+
     // Create matrix
     state.matrix = PuzzleCode.newMatrix(boardConfig.width, boardConfig.height,
       function(){ return {} })
@@ -100,6 +107,7 @@ PuzzleCode.board = (function(){
   }
 
   board.DEFAULT_CONFIG = {
+    animationStyle: "Normal",
     width: 10,
 		height: 5,
 		cellSize: 32,
@@ -117,6 +125,7 @@ PuzzleCode.board = (function(){
     $schema: PuzzleCode.JSON_SCHEMA,
     type: "object",
     properties: {
+      animationStyle: {enum: ["Normal"] },
       width: {type: "integer"},
     	height: {type: "integer"},
     	cellSize: {type: "integer"},
