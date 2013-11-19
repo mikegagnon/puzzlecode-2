@@ -103,6 +103,14 @@ var config = {
       programText: "move",
       constraints: {}
     },
+    {
+      color: PuzzleCode.bot.Color.BLUE,
+      x: 2,
+      y: 2,
+      facing: PuzzleCode.direction.LEFT,
+      programText: "",
+      constraints: {}
+    },
   ],
 }
 

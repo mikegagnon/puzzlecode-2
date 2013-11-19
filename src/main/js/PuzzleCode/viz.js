@@ -261,6 +261,49 @@ PuzzleCode.viz = (function(){
 
 	}
 
+  // percentage of a cell that the bot moves forward before stopping
+	viz.FAIL_MOVE_DEPTH = 0.33
+
+	viz.animateFailMove = function(animationSpec, board) {
+
+		var move_pixels = Math.round(board.config.cellSize * viz.FAIL_MOVE_DEPTH)
+
+	  viz.transitionBot(animationSpec, board, "failMove", function(transition, failMove, bot) {
+	    transition
+	      // First, move the bot forward MOVE_DEPTH pixels
+	      .attr("transform", function(bot) {
+	        // dx == number of pixels bot will move in x direction
+	        var dx = 0
+	        // similar for dy
+	        var dy = 0
+	        if (bot.x != failMove.destX) {
+	          var diff = failMove.destX - bot.x
+	          // assert(diff == 0 || Math.abs(diff) == 1, "X: diff == 0 || diff == 1")
+	          dx = diff * move_pixels
+	        }
+	        if (bot.y != failMove.destY) {
+	          var diff = failMove.destY - bot.y
+	          // assert(diff == 0 || Math.abs(diff) == 1, "Y: diff == 0 || diff == 1")
+	          dy = diff * move_pixels
+	        }
+	        var x = bot.x * board.config.cellSize + dx
+	        var y = bot.y * board.config.cellSize + dy
+	        return viz.botTransformPixels(board, x, y, bot.facing)
+	      })
+	      .ease("cubic")
+			  .duration(board.viz.animationSpeed.duration / 2)
+	      .each("end", function() {
+	        // now back the bot up to where it was before
+	        d3.select(this).transition() 
+	          .attr("transform", function(bot){
+			      	return viz.botTransform(board, bot)
+			      })
+	      })
+	      .ease("cubic")
+			  .duration(board.viz.animationSpeed.duration / 2)
+	  })
+	}
+
 
 	viz.animateProgramDone = function(animationSpec, board) {
 
@@ -290,6 +333,7 @@ PuzzleCode.viz = (function(){
 
 
 	viz.animateStep = function(animationSpec, board) {
+		viz.animateFailMove(animationSpec, board)
 		viz.animateMoveNonTorus(animationSpec, board)
 		viz.animateMoveTorus(animationSpec, board)
 		viz.animateProgramDone(animationSpec, board)
