@@ -193,8 +193,36 @@ PuzzleCode.viz = (function(){
 	  })
   }
 
+	viz.animateProgramDone = function(animationSpec, board) {
+
+	  viz.visualizeBot(animationSpec, board, "programDone", function(programDone, bot) {
+
+	    var progDoneId = "programDone_" + viz.botId(board, bot)
+	    board.d3.selectAll("#" + progDoneId)
+	      .data([bot])
+	      .enter()
+	      .append("svg:image")
+	      .attr("id", progDoneId)
+		    .attr("xlink:href", "img/x.svg")
+		    .attr("height", board.config.cellSize)
+	    	.attr("width", board.config.cellSize)
+	      .attr("transform", function(bot){
+	      	return viz.botTransform(board, bot)
+	      })
+	      .attr("opacity", "0.0")
+	    .transition()
+	      .attr("opacity", "0.75")
+	      .delay(board.viz.animationSpeed.duration)
+	      .ease(board.viz.animationSpeed.easing)
+	      .duration(board.viz.animationSpeed.duration / 2)
+
+  	})
+  }
+
+
 	viz.animateStep = function(animationSpec, board) {
 		viz.animateMoveNonTorus(animationSpec, board)
+		viz.animateProgramDone(animationSpec, board)
 	}
 
 	viz.init = function(board) {
