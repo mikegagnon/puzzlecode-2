@@ -865,6 +865,80 @@ PuzzleCode.viz = (function(){
        .duration(board.viz.animationSpeed.duration)
    })
   }
+ viz.animateMoveTorus = function(animationSpec, board) {
+   viz.transitionBot(animationSpec, board, "torusMove", function(transition, torusMove, bot) {
+     var cloneBotId = viz.botId(board, bot) + "_clone"
+     // Step 1: clone the bot and slide it out of view
+     // TODO: for some reason this works with selectAll but not select
+     board.d3.selectAll("#" + cloneBotId)
+       .data([bot])
+       .enter()
+       .append("svg:image")
+       .attr("id", cloneBotId)
+       .attr("class", "bot")
+      .attr("xlink:href", "img/bluebot.svg")
+      .attr("height", board.config.cellSize)
+      .attr("width", board.config.cellSize)
+      //.attr("transform", function(bot){ return viz.botTransform(board, bot) })
+      .attr("transform", function(bot) {
+         return viz.botTransform(board, {
+             x: torusMove.prevX,
+             y: torusMove.prevY,
+             facing: bot.facing
+           })
+       })
+       /*.append("svg:use")
+	      // The clone starts at the previous location of the bot
+	      .attr("id", cloneBotId)
+	      .attr("class", "bot")
+	      .attr("xlink:href", "#botTemplate")
+	      .attr("transform", function(bot) {
+	        return botTransform({
+	            cellX: torusMove.prevX,
+	            cellY: torusMove.prevY,
+	            facing: bot.facing
+	          })
+	      })*/
+       .transition()
+       // the clone slides out of view
+       .attr("transform", function(bot) {
+         return viz.botTransform(board, {
+             x: torusMove.oobNextX,
+             y: torusMove.oobNextY,
+             facing: bot.facing
+           })
+       })
+       .ease(board.viz.animationSpeed.easing)
+       .duration(board.viz.animationSpeed.duration)
+       // garbage collect the bot clone
+       .each("end", function() {
+         d3.select(this).remove()
+       })
+     // Step 2: move the original bot to the other side of the screen, and
+     // slide it into view
+     transition
+       // First, immediately move the bot to the other side of the board (out
+       // of bounds)
+       .attr("transform", function(bot) {
+         return viz.botTransform(board, {
+           x: torusMove.oobPrevX,
+           y: torusMove.oobPrevY,
+           facing: bot.facing
+         })
+       })
+       .ease(board.viz.animationSpeed.easing)
+       .duration(0)
+       // once the bot is on the other side of the screen, move it like normal
+       .each("end", function() {
+         d3.select(this).transition()
+           .attr("transform", function(bot){
+          return viz.botTransform(board, bot)
+         })
+         .ease(board.viz.animationSpeed.easing)
+         .duration(board.viz.animationSpeed.duration)
+       })
+   })
+ }
  viz.animateProgramDone = function(animationSpec, board) {
    viz.visualizeBot(animationSpec, board, "programDone", function(programDone, bot) {
      var progDoneId = "programDone_" + viz.botId(board, bot)
@@ -889,6 +963,7 @@ PuzzleCode.viz = (function(){
   }
  viz.animateStep = function(animationSpec, board) {
   viz.animateMoveNonTorus(animationSpec, board)
+  viz.animateMoveTorus(animationSpec, board)
   viz.animateProgramDone(animationSpec, board)
  }
  viz.init = function(board) {
