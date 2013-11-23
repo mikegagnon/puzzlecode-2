@@ -113,7 +113,7 @@ PuzzleCode.viz = (function(){
 		var buttonOrder = [
 			"reset",
 			"step",
-			"play"
+			"playpause"
 		]
 
 		_(buttonOrder).forEach(function(buttonName){

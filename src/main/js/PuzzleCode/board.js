@@ -12,7 +12,8 @@ PuzzleCode.board = (function(){
 
   board.PlayState = {
     PAUSED: 0,
-    PLAYING: 1
+    STEPPING: 1, // the animation for a single step is currently under way
+    PLAYING: 2 
   }
 
   // ensure the all the board invariants hold

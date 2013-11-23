@@ -596,7 +596,8 @@ PuzzleCode.board = (function(){
   var board = {}
   board.PlayState = {
     PAUSED: 0,
-    PLAYING: 1
+    STEPPING: 1, // the animation for a single step is currently under way
+    PLAYING: 2
   }
   // ensure the all the board invariants hold
   board.check = function(board){
@@ -791,7 +792,7 @@ PuzzleCode.viz = (function(){
   var buttonOrder = [
    "reset",
    "step",
-   "play"
+   "playpause"
   ]
   _(buttonOrder).forEach(function(buttonName){
    if (_.contains(board.config.buttons, buttonName)) {
@@ -1029,33 +1030,35 @@ PuzzleCode.viz = (function(){
  }
   return viz
 })()
-PuzzleCode.buttons = {}
-PuzzleCode.buttons["play"] = {
- glyph: "play",
- fn: function(board) {
-  "use strict"
-  console.log("play")
-  console.dir(board)
- }
-}
-PuzzleCode.buttons["step"] = {
- glyph: "step-forward",
- fn: function(board) {
-  "use strict"
-  if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
-   var animationSpec = PuzzleCode.sim.step(board)
-   PuzzleCode.viz.animateStep(animationSpec, board)
+PuzzleCode.buttons = (function(){
+ "use strict"
+ var buttons = {}
+ buttons.playpause = {
+  glyph: "play",
+  fn: function(board) {
   }
  }
-}
-PuzzleCode.buttons["reset"] = {
- glyph: "refresh",
- fn: function(board) {
-  "use strict"
-  console.log("reset")
-  console.dir(board)
+ buttons.step = {
+  glyph: "step-forward",
+  fn: function(board) {
+   if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
+    var animationSpec = PuzzleCode.sim.step(board)
+    PuzzleCode.viz.animateStep(animationSpec, board)
+    board.state.playState = PuzzleCode.board.PlayState.STEPPING
+    var stepDone = function() {
+     board.state.playState = PuzzleCode.board.PlayState.PAUSED
+    }
+    setTimeout(stepDone, board.viz.animationSpeed.duration)
+   }
+  }
  }
-}
+ buttons.reset = {
+  glyph: "refresh",
+  fn: function(board) {
+  }
+ }
+ return buttons
+})()
 // divMap[divId] == the board object for that div
 PuzzleCode.divMap = {}
 /**
@@ -1088,7 +1091,7 @@ PuzzleCode.init = function(boardConfig, divId) {
  * Testing
  ******************************************************************************/
 var config = {
-  buttons: ["play", "reset", "step"],
+  buttons: ["playpause", "reset", "step"],
  bots: [
     {
       color: PuzzleCode.bot.Color.BLUE,
@@ -1118,7 +1121,7 @@ var config = {
 }
 var board1 = PuzzleCode.init(config, "#board1")
 var config = {
-  buttons: ["play", "step"],
+  buttons: ["playpause", "step"],
   width: 5,
   height: 3,
   cellSize: 16,
