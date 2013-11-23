@@ -1,5 +1,5 @@
 .pc-grid-line {
-	stroke: rgb(204,204,204);
+	stroke: #e8e8e8;
 	stroke-width: 1;
   shape-rendering:crispEdges
 }
