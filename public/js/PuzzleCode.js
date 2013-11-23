@@ -738,8 +738,47 @@ PuzzleCode.editor = (function(){
       }
     }
   })
+  editor.getAreaDomId = function(board, editorId) {
+    return board.divId + "-editor-area-" + editorId
+  }
   editor.getDomId = function(board, editorId) {
     return board.divId + "-editor-" + editorId
+  }
+  editor.getToolbarDomId = function(board, editorId) {
+    return board.divId + "-editor-toolbar-" + editorId
+  }
+  editor.getToolbarButtonsDomId = function(board, editorId) {
+    return board.divId + "-editor-toolbar-buttons-" + editorId
+  }
+  editor.getButtonId = function(board, editorId, buttonName) {
+    return board.divId + "-editor-" + editorId + "-button-" + buttonName
+  }
+  editor.drawButtons = function(board, editorId) {
+    var toolbarId = editor.getToolbarDomId(board, editorId)
+    var buttonsId = editor.getToolbarButtonsDomId(board, editorId)
+    $(toolbarId).append(
+      "<div " +
+      "id='" + PuzzleCode.chomp(buttonsId) + "' " +
+      "class='btn-group'></div>")
+    var buttonTemplate =
+      "<button type='button' class='btn btn-default' " +
+      "id='{{{buttonId}}}' " +
+      "onclick=\"PuzzleCode.editor.click('{{{buttonName}}}', " +
+                                        "'{{{boardDivId}}}', " +
+                                        "{{{editorId}}})\" >" +
+      "<span class='glyphicon {{{glyph}}}'></span>" +
+      "</button>"
+    var buttonName = "reset"
+    var glyph = "glyphicon-refresh"
+    var buttonId = editor.getButtonId(board, editorId, buttonName)
+    $(buttonsId).append(
+      Mustache.render(buttonTemplate, {
+        buttonId: PuzzleCode.chomp(buttonId),
+        buttonName: buttonName,
+        glyph: glyph,
+        boardDivId: board.divId,
+        editorId: editorId
+      }))
   }
   editor.newEditor = function(board, botId, editorId) {
     var settings = {
@@ -751,15 +790,27 @@ PuzzleCode.editor = (function(){
       height: 50
     }
     /*<div id="codeMirrorEdit"></div>*/
-    var editorDomId = PuzzleCode.chomp(editor.getDomId(board, editorId))
-    var editorElement = $(board.divId)
-      .append("<div " +
-              "class='editor-wrapper' " +
-              "id='" + editorDomId + "'>" +
-              "</div>")
-    console.dir(document.getElementById(editorDomId), editorElement)
-    var cm = CodeMirror(document.getElementById(editorDomId), settings)
-    cm.setSize("100%", "250px")
+    var areaId = editor.getAreaDomId(board, editorId)
+    $(board.divId).append(
+      "<div " +
+      "class='editor-area' " +
+      "id='" + PuzzleCode.chomp(areaId) + "'>" +
+      "</div>")
+    var toolbarId = editor.getToolbarDomId(board, editorId)
+    $(areaId).append(
+      "<div " +
+      "id='" + PuzzleCode.chomp(toolbarId) + "' " +
+      "class='btn-toolbar'></div>")
+    editor.drawButtons(board, editorId)
+    var editorDomId = editor.getDomId(board, editorId)
+    var editorElement = $(areaId).append(
+      "<div " +
+      "class='editor-wrapper' " +
+      "id='" + PuzzleCode.chomp(editorDomId) + "'>" +
+      "</div>")
+    var cm = CodeMirror(document.getElementById(PuzzleCode.chomp(editorDomId)),
+                        settings)
+    cm.setSize("100%", "170px")
     //  TODO: put the cursorActivity function in seperate file
     /*var line = 0
     cm.on("cursorActivity", function(cm) {
@@ -1119,6 +1170,8 @@ PuzzleCode.viz = (function(){
   board.svgId = board.divId + "_svg"
   $(board.divId)
    .addClass("pc-board")
+   // the play area holds the grid and the buttons for controlling the
+   // simulation
    .append("<div "+
      "class='pc-play-area' " +
      "id='" + PuzzleCode.chomp(board.playAreaId) + "'></div>")

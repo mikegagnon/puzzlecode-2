@@ -28,6 +28,10 @@ body {
 .dimmed {
   opacity: .25;
 }
+.editor-area {
+  float: left;
+  margin-right: 6px;
+}
 .editor-wrapper {
   line-height: 1.3em;
   font-family: monospace;
@@ -39,11 +43,12 @@ body {
   /* This prevents unwanted scrollbars from showing up on the body and wrapper in IE. */
   overflow: hidden;
   background-color: white;
-  width: 530px;
+  width: 250px;
 
   /* Copied from Bootstrap's textarea */
   display: inline-block;
-  padding: 4px 6px;
+  /*padding: 4px 6px;*/
+  margin-top: 5px;
   margin-bottom: 0px;
   margin-left: 0px;
   margin-right: 6px;
