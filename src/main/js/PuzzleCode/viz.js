@@ -95,6 +95,7 @@ PuzzleCode.viz = (function(){
 	  board.d3.selectAll(".bot")
 	    .data(board.state.bots)
 	    .enter().append("svg:image")
+	    .attr("class", "board-item")
 	    .attr("id", function(bot){ return  PuzzleCode.chomp(viz.botId(board, bot)) })
 	    .attr("xlink:href", "img/bluebot.svg")
 	    .attr("height", board.config.cellSize)
@@ -212,6 +213,7 @@ PuzzleCode.viz = (function(){
 	      .data([bot])
 	      .enter()
 	      .append("svg:image")
+	      .attr("class", "board-item")
 	      .attr("id",  PuzzleCode.chomp(cloneBotId))
 	      .attr("class", "bot")
 		    .attr("xlink:href", "img/bluebot.svg")
@@ -321,6 +323,7 @@ PuzzleCode.viz = (function(){
 	      .data([bot])
 	      .enter()
 	      .append("svg:image")
+	      .attr("class", "board-item")
 	      .attr("id", progDoneId)
 		    .attr("xlink:href", "img/x.svg")
 		    .attr("height", board.config.cellSize)
@@ -344,6 +347,16 @@ PuzzleCode.viz = (function(){
 		viz.animateMoveNonTorus(animationSpec, board)
 		viz.animateMoveTorus(animationSpec, board)
 		viz.animateProgramDone(animationSpec, board)
+	}
+
+	viz.initItems = function(board) {
+
+		// first, delete any existing board items
+		board.d3
+			.selectAll(".board-item")
+			.data([]).exit().remove()
+
+		viz.drawBots(board)
 	}
 
 	viz.init = function(board) {
@@ -382,7 +395,8 @@ PuzzleCode.viz = (function(){
 		viz.drawButtons(board)
 		viz.drawBoardContainer(board)
   	viz.drawCells(board)
-  	viz.drawBots(board)
+  	viz.initItems(board)
+  	
 	}
 
   return viz

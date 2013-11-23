@@ -785,6 +785,7 @@ PuzzleCode.viz = (function(){
    board.d3.selectAll(".bot")
      .data(board.state.bots)
      .enter().append("svg:image")
+     .attr("class", "board-item")
      .attr("id", function(bot){ return PuzzleCode.chomp(viz.botId(board, bot)) })
      .attr("xlink:href", "img/bluebot.svg")
      .attr("height", board.config.cellSize)
@@ -889,6 +890,7 @@ PuzzleCode.viz = (function(){
        .data([bot])
        .enter()
        .append("svg:image")
+       .attr("class", "board-item")
        .attr("id", PuzzleCode.chomp(cloneBotId))
        .attr("class", "bot")
       .attr("xlink:href", "img/bluebot.svg")
@@ -987,6 +989,7 @@ PuzzleCode.viz = (function(){
        .data([bot])
        .enter()
        .append("svg:image")
+       .attr("class", "board-item")
        .attr("id", progDoneId)
       .attr("xlink:href", "img/x.svg")
       .attr("height", board.config.cellSize)
@@ -1007,6 +1010,13 @@ PuzzleCode.viz = (function(){
   viz.animateMoveNonTorus(animationSpec, board)
   viz.animateMoveTorus(animationSpec, board)
   viz.animateProgramDone(animationSpec, board)
+ }
+ viz.initItems = function(board) {
+  // first, delete any existing board items
+  board.d3
+   .selectAll(".board-item")
+   .data([]).exit().remove()
+  viz.drawBots(board)
  }
  viz.init = function(board) {
   var cellSize = board.config.cellSize
@@ -1036,7 +1046,7 @@ PuzzleCode.viz = (function(){
   viz.drawButtons(board)
   viz.drawBoardContainer(board)
    viz.drawCells(board)
-   viz.drawBots(board)
+   viz.initItems(board)
  }
   return viz
 })()
@@ -1051,6 +1061,13 @@ PuzzleCode.buttons = (function(){
   $(spanId)
    .removeClass()
    .addClass("glyphicon " + glyph)
+ }
+ buttons.stopPlaying = function(board) {
+  if (board.state.playState == PuzzleCode.board.PlayState.PLAYING) {
+   board.state.playState = PuzzleCode.board.PlayState.PAUSED
+   buttons.setGlyph(board, "playpause", "glyphicon-play")
+   clearInterval(board.state.playInterval)
+  }
  }
  buttons.playpause = {
   glyph: "glyphicon-play",
@@ -1067,9 +1084,7 @@ PuzzleCode.buttons = (function(){
             board.viz.animationSpeed.delay
     board.state.playInterval = setInterval(playStep, cycleTime)
    } else if (board.state.playState == PuzzleCode.board.PlayState.PLAYING) {
-    board.state.playState = PuzzleCode.board.PlayState.PAUSED
-    buttons.setGlyph(board, "playpause", "glyphicon-play")
-    clearInterval(board.state.playInterval)
+    buttons.stopPlaying(board)
    }
   }
  }
@@ -1090,6 +1105,9 @@ PuzzleCode.buttons = (function(){
  buttons.reset = {
   glyph: "glyphicon-refresh",
   fn: function(board) {
+   buttons.stopPlaying(board)
+   board.state = PuzzleCode.board.newState(board.config)
+   PuzzleCode.viz.initItems(board)
   }
  }
  return buttons

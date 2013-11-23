@@ -20,6 +20,14 @@ PuzzleCode.buttons = (function(){
 			.addClass("glyphicon " + glyph)
 	}
 
+	buttons.stopPlaying = function(board) {
+		if (board.state.playState == PuzzleCode.board.PlayState.PLAYING)  {
+			board.state.playState = PuzzleCode.board.PlayState.PAUSED
+			buttons.setGlyph(board, "playpause", "glyphicon-play")
+			clearInterval(board.state.playInterval)
+		}
+	}
+
 	buttons.playpause = {
 		glyph: "glyphicon-play",
 		fn: function(board) {
@@ -39,9 +47,7 @@ PuzzleCode.buttons = (function(){
 
 				board.state.playInterval = setInterval(playStep, cycleTime)
 			} else if (board.state.playState == PuzzleCode.board.PlayState.PLAYING) {
-				board.state.playState = PuzzleCode.board.PlayState.PAUSED
-				buttons.setGlyph(board, "playpause", "glyphicon-play")
-				clearInterval(board.state.playInterval)
+				buttons.stopPlaying(board)
 			}
 		} 
 	}
@@ -67,6 +73,9 @@ PuzzleCode.buttons = (function(){
 	buttons.reset = {
 		glyph: "glyphicon-refresh",
 		fn: function(board) {
+			buttons.stopPlaying(board)
+			board.state = PuzzleCode.board.newState(board.config)
+			PuzzleCode.viz.initItems(board)
 		}
 	}
 
