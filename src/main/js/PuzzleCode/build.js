@@ -6,4 +6,5 @@
 #include "init.js"
 #include "buttons.js"
 #include "click.js"
+#include "editor.js"
 #include "sim.js"

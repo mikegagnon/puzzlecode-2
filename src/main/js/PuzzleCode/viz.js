@@ -3,6 +3,7 @@
 
 #include "main/js/PuzzleCode/header.js"
 #include "main/js/PuzzleCode/board.js"
+#include "main/js/PuzzleCode/editor.js"
 #include "main/js/PuzzleCode/direction.js"
 
 PuzzleCode.viz = (function(){
@@ -359,6 +360,12 @@ PuzzleCode.viz = (function(){
 		viz.drawBots(board)
 	}
 
+	viz.drawEditors = function(board) {
+		board.viz.editors = _.map(board.config.editors, function(botId, editorId){
+			return PuzzleCode.editor.newEditor(board, botId, editorId)
+		})
+	}
+
 	viz.init = function(board) {
 
 		var cellSize = board.config.cellSize
@@ -379,11 +386,19 @@ PuzzleCode.viz = (function(){
 			.range([0, height * cellSize])
 
 		board.toolbarId = board.divId + "_toolbar"
+		board.playAreaId = board.divId + "_playarea"
 		board.playbackButtonsId = board.divId + "_playback_buttons"
 		board.svgId = board.divId + "_svg"
 
 		$(board.divId)
 			.addClass("pc-board")
+			// the play area holds the grid and the buttons for controlling the
+			// simulation
+			.append("<div "+
+					"class='pc-play-area' " +
+					"id='" + PuzzleCode.chomp(board.playAreaId) + "'></div>")
+
+		$(board.playAreaId)
 			.append("<div " +
 				      "id='" +   PuzzleCode.chomp(board.toolbarId) + "' " +
 						  "class='btn-toolbar'></div>")
@@ -394,6 +409,7 @@ PuzzleCode.viz = (function(){
 
 		viz.drawButtons(board)
 		viz.drawBoardContainer(board)
+		viz.drawEditors(board)
   	viz.drawCells(board)
   	viz.initItems(board)
   	

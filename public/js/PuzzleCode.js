@@ -681,8 +681,9 @@ PuzzleCode.board = (function(){
     width: 10,
   height: 5,
   cellSize: 32,
+    buttons: [],
     bots: [],
-    buttons: []
+    editors: []
  }
  /**
    * Schemas for JSON objects
@@ -703,11 +704,87 @@ PuzzleCode.board = (function(){
       bots: {
         type: "array",
         items: PuzzleCode.bot.BotConfigSchema
+      },
+      // editors == array of bot ids that have editors
+      editors: {
+        type: "array",
+        items: "integer"
       }
     },
     required: ["height", "width", "cellSize", "bots"]
   }
  return board
+})()
+/**
+ * A board may have zero or more editors; each editor is associated with
+ * exactly one bot.
+ */
+PuzzleCode.editor = (function(){
+  "use strict"
+  var editor = {}
+  /**
+   * One time, global initialization code
+   ****************************************************************************/
+  // Define a syntax highlighter for the PuzzleCode language
+  CodeMirror.defineMIME("text/x-puzzlecode", {
+    name: "clike",
+    keywords: PuzzleCode.compiler.RESERVED_WORDS,
+    blockKeywords: {},
+    atoms: {},
+    hooks: {
+      "@": function(stream) {
+        stream.eatWhile(/[\w\$_]/);
+        return "meta";
+      }
+    }
+  })
+  editor.getDomId = function(board, editorId) {
+    return board.divId + "-editor-" + editorId
+  }
+  editor.newEditor = function(board, botId, editorId) {
+    var settings = {
+      gutters: ["note-gutter", "CodeMirror-linenumbers"],
+      mode: "text/x-puzzlecode",
+      theme: "eclipse",
+      smartIndent: false,
+      lineNumbers: true,
+      height: 50
+    }
+    /*<div id="codeMirrorEdit"></div>*/
+    var editorDomId = PuzzleCode.chomp(editor.getDomId(board, editorId))
+    var editorElement = $(board.divId)
+      .append("<div " +
+              "class='editor-wrapper' " +
+              "id='" + editorDomId + "'>" +
+              "</div>")
+    console.dir(document.getElementById(editorDomId), editorElement)
+    var cm = CodeMirror(document.getElementById(editorDomId), settings)
+    cm.setSize("100%", "250px")
+    //  TODO: put the cursorActivity function in seperate file
+    /*var line = 0
+    cm.on("cursorActivity", function(cm) {
+      var newLine = cm.getCursor().line
+      if (PLAY_STATUS == PlayStatus.INITAL_STATE_PAUSED) {
+        if (line != newLine) {
+          compile()
+        }
+        line = newLine
+      }
+    })
+
+    // You cannot edit the program, unless it is in the reset state
+    cm.on("beforeChange", function(cm, change) {
+      if (PLAY_STATUS != PlayStatus.INITAL_STATE_PAUSED) {
+        change.cancel()
+      }
+    })*/
+    return {
+      editorId: editorId,
+      botId: botId,
+      cm: cm
+    }
+  }
+  return editor
 })()
 PuzzleCode.viz = (function(){
   "use strict"
@@ -1018,6 +1095,11 @@ PuzzleCode.viz = (function(){
    .data([]).exit().remove()
   viz.drawBots(board)
  }
+ viz.drawEditors = function(board) {
+  board.viz.editors = _.map(board.config.editors, function(botId, editorId){
+   return PuzzleCode.editor.newEditor(board, botId, editorId)
+  })
+ }
  viz.init = function(board) {
   var cellSize = board.config.cellSize
   var width = board.config.width
@@ -1032,10 +1114,15 @@ PuzzleCode.viz = (function(){
    .domain([0, height])
    .range([0, height * cellSize])
   board.toolbarId = board.divId + "_toolbar"
+  board.playAreaId = board.divId + "_playarea"
   board.playbackButtonsId = board.divId + "_playback_buttons"
   board.svgId = board.divId + "_svg"
   $(board.divId)
    .addClass("pc-board")
+   .append("<div "+
+     "class='pc-play-area' " +
+     "id='" + PuzzleCode.chomp(board.playAreaId) + "'></div>")
+  $(board.playAreaId)
    .append("<div " +
           "id='" + PuzzleCode.chomp(board.toolbarId) + "' " +
         "class='btn-toolbar'></div>")
@@ -1045,6 +1132,7 @@ PuzzleCode.viz = (function(){
        "xmlns='http://www.w3.org/2000/svg'></svg>")
   viz.drawButtons(board)
   viz.drawBoardContainer(board)
+  viz.drawEditors(board)
    viz.drawCells(board)
    viz.initItems(board)
  }
@@ -1145,6 +1233,7 @@ PuzzleCode.init = function(boardConfig, divId) {
  ******************************************************************************/
 var config = {
   buttons: ["playpause", "reset", "step"],
+  editors: [0],
  bots: [
     {
       color: PuzzleCode.bot.Color.BLUE,

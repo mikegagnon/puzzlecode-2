@@ -51,6 +51,7 @@ PuzzleCode.init = function(boardConfig, divId) {
  ******************************************************************************/
 var config = {
   buttons: ["playpause", "reset", "step"],
+  editors: [0],
 	bots: [
     {
       color: PuzzleCode.bot.Color.BLUE,
