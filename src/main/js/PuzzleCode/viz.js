@@ -113,7 +113,7 @@ PuzzleCode.viz = (function(){
 			"<button type='button' class='btn btn-default' " +
 			"id='{{{buttonId}}}' " +
 			"onclick=\"PuzzleCode.click('{{{buttonName}}}', '{{{boardDivId}}}')\" >" +
-			"<span class='glyphicon glyphicon-{{{glyph}}}'></span>"  +
+			"<span class='glyphicon {{{glyph}}}'></span>"  +
 			"</button>"
 
 		var buttonOrder = [
@@ -126,7 +126,7 @@ PuzzleCode.viz = (function(){
 			if (_.contains(board.config.buttons, buttonName)) {
 				$(board.playbackButtonsId)
 					.append(Mustache.render(buttonTemplate, {
-						buttonId: PuzzleCode.buttons.getId(board, buttonName),
+						buttonId: PuzzleCode.chomp(PuzzleCode.buttons.getId(board, buttonName)),
 						buttonName: buttonName,
 						glyph: PuzzleCode.buttons[buttonName].glyph,
 						boardDivId: board.divId

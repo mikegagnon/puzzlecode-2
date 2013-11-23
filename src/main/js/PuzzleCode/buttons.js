@@ -10,18 +10,22 @@ PuzzleCode.buttons = (function(){
 	var buttons = {}
 
 	buttons.getId = function(board, buttonName) {
-		return board.divId + "-" + buttonName
+		return board.divId + "-button-" + buttonName
 	}
 
 	buttons.setGlyph = function(board, buttonName, glyph) {
-
+		var spanId = buttons.getId(board, buttonName) + ">span"
+		$(spanId)
+			.removeClass()
+			.addClass("glyphicon " + glyph)
 	}
 
 	buttons.playpause = {
-		glyph: "play",
+		glyph: "glyphicon-play",
 		fn: function(board) {
 			if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
 				board.state.playState = PuzzleCode.board.PlayState.PLAYING
+				buttons.setGlyph(board, "playpause", "glyphicon-pause")
 
 				var playStep = function() {
 					var animationSpec = PuzzleCode.sim.step(board)
@@ -33,13 +37,17 @@ PuzzleCode.buttons = (function(){
 				var cycleTime = board.viz.animationSpeed.duration +
 												board.viz.animationSpeed.delay
 
-				setInterval(playStep, cycleTime)
+				board.state.playInterval = setInterval(playStep, cycleTime)
+			} else if (board.state.playState == PuzzleCode.board.PlayState.PLAYING) {
+				board.state.playState = PuzzleCode.board.PlayState.PAUSED
+				buttons.setGlyph(board, "playpause", "glyphicon-play")
+				clearInterval(board.state.playInterval)
 			}
-		}
+		} 
 	}
 
 	buttons.step = {
-		glyph: "step-forward",
+		glyph: "glyphicon-step-forward",
 		fn: function(board) {
 			if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
 				board.state.playState = PuzzleCode.board.PlayState.STEPPING
@@ -57,7 +65,7 @@ PuzzleCode.buttons = (function(){
 	}
 
 	buttons.reset = {
-		glyph: "refresh",
+		glyph: "glyphicon-refresh",
 		fn: function(board) {
 		}
 	}
