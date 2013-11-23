@@ -21,6 +21,11 @@ PuzzleCode.newMatrix = function(width, height, defaultValue) {
   })
 }
 
+// removes a leading '#' from id, if it exists 
+PuzzleCode.chomp = function(id) {
+  return id.replace(/^#/, '')
+}
+
 
 
 #endif

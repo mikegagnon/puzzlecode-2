@@ -9,9 +9,32 @@ PuzzleCode.buttons = (function(){
 
 	var buttons = {}
 
+	buttons.getId = function(board, buttonName) {
+		return board.divId + "-" + buttonName
+	}
+
+	buttons.setGlyph = function(board, buttonName, glyph) {
+
+	}
+
 	buttons.playpause = {
 		glyph: "play",
 		fn: function(board) {
+			if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
+				board.state.playState = PuzzleCode.board.PlayState.PLAYING
+
+				var playStep = function() {
+					var animationSpec = PuzzleCode.sim.step(board)
+					PuzzleCode.viz.animateStep(animationSpec, board)
+				}
+
+				playStep()
+
+				var cycleTime = board.viz.animationSpeed.duration +
+												board.viz.animationSpeed.delay
+
+				setInterval(playStep, cycleTime)
+			}
 		}
 	}
 
@@ -19,9 +42,10 @@ PuzzleCode.buttons = (function(){
 		glyph: "step-forward",
 		fn: function(board) {
 			if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
+				board.state.playState = PuzzleCode.board.PlayState.STEPPING
+
 				var animationSpec = PuzzleCode.sim.step(board)
 				PuzzleCode.viz.animateStep(animationSpec, board)
-				board.state.playState = PuzzleCode.board.PlayState.STEPPING
 
 				var stepDone = function() {
 					board.state.playState = PuzzleCode.board.PlayState.PAUSED

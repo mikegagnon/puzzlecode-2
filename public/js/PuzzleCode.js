@@ -28,6 +28,10 @@ PuzzleCode.newMatrix = function(width, height, defaultValue) {
     }
   })
 }
+// removes a leading '#' from id, if it exists 
+PuzzleCode.chomp = function(id) {
+  return id.replace(/^#/, '')
+}
 PuzzleCode.HELP_URL = "http://puzzlecode.org/help/"
 PuzzleCode.JSON_SCHEMA = "http://json-schema.org/draft-04/schema#"
 PuzzleCode.assert = function(message, func) {
@@ -591,6 +595,10 @@ PuzzleCode.newMatrix = function(width, height, defaultValue) {
     }
   })
 }
+// removes a leading '#' from id, if it exists 
+PuzzleCode.chomp = function(id) {
+  return id.replace(/^#/, '')
+}
 PuzzleCode.board = (function(){
   "use strict"
   var board = {}
@@ -771,21 +779,26 @@ PuzzleCode.viz = (function(){
    return viz.botTransformPixels(board, x, y, bot.facing)
  }
  viz.botId = function(board, bot) {
-   return board.svgId.replace(/^#/, "") + "_bot_" + bot.id
+   return board.svgId + "_bot_" + bot.id
  }
  viz.drawBots = function(board){
    board.d3.selectAll(".bot")
      .data(board.state.bots)
      .enter().append("svg:image")
-     .attr("id", function(bot){ return viz.botId(board, bot) })
+     .attr("id", function(bot){ return PuzzleCode.chomp(viz.botId(board, bot)) })
      .attr("xlink:href", "img/bluebot.svg")
      .attr("height", board.config.cellSize)
      .attr("width", board.config.cellSize)
      .attr("transform", function(bot){ return viz.botTransform(board, bot) })
  }
  viz.drawButtons = function(board) {
+  $(board.toolbarId)
+   .append("<div " +
+          "id='" + PuzzleCode.chomp(board.playbackButtonsId) + "' " +
+       "class='btn-group'></div>")
   var buttonTemplate =
    "<button type='button' class='btn btn-default' " +
+   "id='{{{buttonId}}}' " +
    "onclick=\"PuzzleCode.click('{{{buttonName}}}', '{{{boardDivId}}}')\" >" +
    "<span class='glyphicon glyphicon-{{{glyph}}}'></span>" +
    "</button>"
@@ -798,6 +811,7 @@ PuzzleCode.viz = (function(){
    if (_.contains(board.config.buttons, buttonName)) {
     $(board.playbackButtonsId)
      .append(Mustache.render(buttonTemplate, {
+      buttonId: PuzzleCode.buttons.getId(board, buttonName),
       buttonName: buttonName,
       glyph: PuzzleCode.buttons[buttonName].glyph,
       boardDivId: board.divId
@@ -852,7 +866,7 @@ PuzzleCode.viz = (function(){
 	 */
  viz.transitionBot = function(animationSpec, board, visualizeKey, fn) {
    viz.visualizeBot(animationSpec, board, visualizeKey, function(vizz, bot) {
-     var transition = d3.select("#" + viz.botId(board, bot)).transition()
+     var transition = d3.select(viz.botId(board, bot)).transition()
      fn(transition, vizz, bot)
    })
  }
@@ -871,11 +885,11 @@ PuzzleCode.viz = (function(){
      var cloneBotId = viz.botId(board, bot) + "_clone"
      // Step 1: clone the bot and slide it out of view
      // TODO: for some reason this works with selectAll but not select
-     board.d3.selectAll("#" + cloneBotId)
+     board.d3.selectAll(cloneBotId)
        .data([bot])
        .enter()
        .append("svg:image")
-       .attr("id", cloneBotId)
+       .attr("id", PuzzleCode.chomp(cloneBotId))
        .attr("class", "bot")
       .attr("xlink:href", "img/bluebot.svg")
       .attr("height", board.config.cellSize)
@@ -968,7 +982,7 @@ PuzzleCode.viz = (function(){
  }
  viz.animateProgramDone = function(animationSpec, board) {
    viz.visualizeBot(animationSpec, board, "programDone", function(programDone, bot) {
-     var progDoneId = "programDone_" + viz.botId(board, bot)
+     var progDoneId = "programDone_" + PuzzleCode.chomp(viz.botId(board, bot))
      board.d3.selectAll("#" + progDoneId)
        .data([bot])
        .enter()
@@ -1013,16 +1027,12 @@ PuzzleCode.viz = (function(){
   $(board.divId)
    .addClass("pc-board")
    .append("<div " +
-          "id='" + board.toolbarId.replace(/^#/, '') + "' " +
+          "id='" + PuzzleCode.chomp(board.toolbarId) + "' " +
         "class='btn-toolbar'></div>")
    .append("<svg " +
        "class='pc-svg-board' "+
-       "id='" + board.svgId.replace(/^#/,'') + "' class='svgBoard' " +
+       "id='" + PuzzleCode.chomp(board.svgId) + "' class='svgBoard' " +
        "xmlns='http://www.w3.org/2000/svg'></svg>")
-  $(board.toolbarId)
-   .append("<div " +
-          "id='" + board.playbackButtonsId.replace(/^#/, '') + "' " +
-       "class='btn-group'></div>")
   viz.drawButtons(board)
   viz.drawBoardContainer(board)
    viz.drawCells(board)
@@ -1033,18 +1043,34 @@ PuzzleCode.viz = (function(){
 PuzzleCode.buttons = (function(){
  "use strict"
  var buttons = {}
+ buttons.getId = function(board, buttonName) {
+  return board.divId + "-" + buttonName
+ }
+ buttons.setGlyph = function(board, buttonName, glyph) {
+ }
  buttons.playpause = {
   glyph: "play",
   fn: function(board) {
+   if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
+    board.state.playState = PuzzleCode.board.PlayState.PLAYING
+    var playStep = function() {
+     var animationSpec = PuzzleCode.sim.step(board)
+     PuzzleCode.viz.animateStep(animationSpec, board)
+    }
+    playStep()
+    var cycleTime = board.viz.animationSpeed.duration +
+            board.viz.animationSpeed.delay
+    setInterval(playStep, cycleTime)
+   }
   }
  }
  buttons.step = {
   glyph: "step-forward",
   fn: function(board) {
    if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
+    board.state.playState = PuzzleCode.board.PlayState.STEPPING
     var animationSpec = PuzzleCode.sim.step(board)
     PuzzleCode.viz.animateStep(animationSpec, board)
-    board.state.playState = PuzzleCode.board.PlayState.STEPPING
     var stepDone = function() {
      board.state.playState = PuzzleCode.board.PlayState.PAUSED
     }
@@ -2033,6 +2059,10 @@ PuzzleCode.newMatrix = function(width, height, defaultValue) {
       })
     }
   })
+}
+// removes a leading '#' from id, if it exists 
+PuzzleCode.chomp = function(id) {
+  return id.replace(/^#/, '')
 }
 /******************************************************************************/
 TEST = "PuzzleCode.newMatrix"
