@@ -57,8 +57,6 @@ PuzzleCode.editor = (function(){
     var toolbarId = editor.getToolbarDomId(board, editorId)
     var buttonsId = editor.getToolbarButtonsDomId(board, editorId)
 
-
-
     $(toolbarId).append(
       "<div " +
       "id='" +  PuzzleCode.chomp(buttonsId) + "' " +
