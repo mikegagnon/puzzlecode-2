@@ -11,13 +11,25 @@ PuzzleCode.board = (function(){
   var board = {}
 
   board.PlayState = {
-    PAUSED: 0,
-    STEPPING: 1, // the animation for a single step is currently under way
-    PLAYING: 2 
+
+    /**
+     * The difference between PAUSED and INITIAL_STATE_PAUSED is that 
+     * INITIAL_STATE_PAUSED denotes that the simulation has NOT yet begun.
+     * Therefore it is OK to do things like edit the program.
+     */
+    INITIAL_STATE_PAUSED: 0,
+    PAUSED: 1,
+
+    STEPPING: 2, // the animation for a single step is currently under way
+    PLAYING: 3
+  }
+
+  board.getBot = function(board, botId) {
+    return _.find(board.state.bots, function(b){return b.id == botId})
   }
 
   // ensure the all the board invariants hold
-  board.check = function(board){
+  board.check = function(board) {
     if (!PuzzleCode.DEBUG) {
       return
     }
@@ -73,7 +85,7 @@ PuzzleCode.board = (function(){
       error: false
     }
 
-    state.playState = board.PlayState.PAUSED
+    state.playState = board.PlayState.INITIAL_STATE_PAUSED
 
     // Create matrix
     state.matrix = PuzzleCode.newMatrix(boardConfig.width, boardConfig.height,

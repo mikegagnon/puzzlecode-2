@@ -51,14 +51,14 @@ PuzzleCode.init = function(boardConfig, divId) {
  ******************************************************************************/
 var config = {
   buttons: ["playpause", "reset", "step", "editor_reset"],
-  editors: [0,1],
+  editors: [0],
 	bots: [
     {
       color: PuzzleCode.bot.Color.BLUE,
       x: 2,
       y: 1,
       facing: PuzzleCode.direction.RIGHT,
-      programText: "",
+      programText: "move",
       constraints: {}
     },
     {
@@ -74,7 +74,7 @@ var config = {
       x: 0,
       y: 0,
       facing: PuzzleCode.direction.LEFT,
-      programText: "move\nmove\nmove\nmove",
+      programText: "move\nmove\nmove",
       constraints: {}
     },
   ],

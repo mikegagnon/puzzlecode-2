@@ -31,7 +31,8 @@ PuzzleCode.buttons = (function(){
 	buttons.playpause = {
 		glyph: "glyphicon-play",
 		fn: function(board) {
-			if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
+			if (board.state.playState == PuzzleCode.board.PlayState.INITIAL_STATE_PAUSED ||
+					board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
 				board.state.playState = PuzzleCode.board.PlayState.PLAYING
 				buttons.setGlyph(board, "playpause", "glyphicon-pause")
 
@@ -55,7 +56,8 @@ PuzzleCode.buttons = (function(){
 	buttons.step = {
 		glyph: "glyphicon-step-forward",
 		fn: function(board) {
-			if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
+			if (board.state.playState == PuzzleCode.board.PlayState.INITIAL_STATE_PAUSED ||
+					board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
 				board.state.playState = PuzzleCode.board.PlayState.STEPPING
 
 				var animationSpec = PuzzleCode.sim.step(board)

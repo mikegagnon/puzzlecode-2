@@ -112,7 +112,7 @@ PuzzleCode.viz = (function(){
 							"class='btn-group'></div>")
 
 		var buttonTemplate =
-			"<button type='button' class='btn btn-default' " +
+			"<button type='button' class='btn btn-default btn-sm' " +
 			"id='{{{buttonId}}}' " +
 			"onclick=\"PuzzleCode.click('{{{buttonName}}}', '{{{boardDivId}}}')\" >" +
 			"<span class='glyphicon {{{glyph}}}'></span>"  +

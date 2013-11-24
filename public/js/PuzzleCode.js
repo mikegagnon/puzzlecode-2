@@ -265,7 +265,7 @@ PuzzleCode.compiler = (function(){
     },
     invalidOpcode: function(opcode) {
       return {
-        message: "'" + compiler.trim(opcode) + "' is not an instruction",
+        message: "<code>" + compiler.trim(opcode) + "</code> is not an instruction",
         urlKeyword: "invalid_opcode"
       }
     },
@@ -603,12 +603,21 @@ PuzzleCode.board = (function(){
   "use strict"
   var board = {}
   board.PlayState = {
-    PAUSED: 0,
-    STEPPING: 1, // the animation for a single step is currently under way
-    PLAYING: 2
+    /**
+     * The difference between PAUSED and INITIAL_STATE_PAUSED is that 
+     * INITIAL_STATE_PAUSED denotes that the simulation has NOT yet begun.
+     * Therefore it is OK to do things like edit the program.
+     */
+    INITIAL_STATE_PAUSED: 0,
+    PAUSED: 1,
+    STEPPING: 2, // the animation for a single step is currently under way
+    PLAYING: 3
+  }
+  board.getBot = function(board, botId) {
+    return _.find(board.state.bots, function(b){return b.id == botId})
   }
   // ensure the all the board invariants hold
-  board.check = function(board){
+  board.check = function(board) {
     if (!PuzzleCode.DEBUG) {
       return
     }
@@ -652,7 +661,7 @@ PuzzleCode.board = (function(){
     var state = {
       error: false
     }
-    state.playState = board.PlayState.PAUSED
+    state.playState = board.PlayState.INITIAL_STATE_PAUSED
     // Create matrix
     state.matrix = PuzzleCode.newMatrix(boardConfig.width, boardConfig.height,
       function(){ return {} })
@@ -753,6 +762,7 @@ PuzzleCode.editor = (function(){
   editor.getButtonId = function(board, editorId, buttonName) {
     return board.divId + "-editor-" + editorId + "-button-" + buttonName
   }
+  editor.buttonTemplate = "    <button type='button' class='btn btn-default btn-sm'     id='{{{buttonId}}}'     onclick=\"PuzzleCode.click('{{{buttonName}}}',                                '{{{boardDivId}}}',                                 {{{editorId}}})\" >     <span class='glyphicon {{{glyph}}}'></span>     </button>"
   editor.drawButtons = function(board, editorId) {
     var toolbarId = editor.getToolbarDomId(board, editorId)
     var buttonsId = editor.getToolbarButtonsDomId(board, editorId)
@@ -761,21 +771,13 @@ PuzzleCode.editor = (function(){
       "id='" + PuzzleCode.chomp(buttonsId) + "' " +
       "class='btn-group'>" +
       "</div>")
-    var buttonTemplate =
-      "<button type='button' class='btn btn-default' " +
-      "id='{{{buttonId}}}' " +
-      "onclick=\"PuzzleCode.click('{{{buttonName}}}', " +
-                                 "'{{{boardDivId}}}', " +
-                                 "{{{editorId}}})\" >" +
-      "<span class='glyphicon {{{glyph}}}'></span>" +
-      "</button>"
     var buttonOrder = [
       "editor_reset",
     ]
     _(buttonOrder).forEach(function(buttonName){
       if (_.contains(board.config.buttons, buttonName)) {
         $(buttonsId).append(
-          Mustache.render(buttonTemplate, {
+          Mustache.render(editor.buttonTemplate, {
             buttonId: PuzzleCode.chomp(editor.getButtonId(board, editorId, buttonName)),
             buttonName: buttonName,
             glyph: PuzzleCode.buttons[buttonName].glyph,
@@ -789,10 +791,56 @@ PuzzleCode.editor = (function(){
     $(toolbarId).append(
       "<div " +
       "class='btn-group'>" +
-      "<button type='button' class='btn btn-default' style='visibility: hidden'>" +
+      "<button type='button' class='btn btn-default btn-sm' style='visibility: hidden'>" +
       "<span class='glyphicon glyphicon-refresh'></span>" +
       "</button>" +
       "</div>")
+  }
+  editor.getPreElement = function(editorObject, lineIndex) {
+    var editorDomId = editor.getDomId(editorObject.board, editorObject.editorId)
+    return $(editorDomId + " pre").eq(+lineIndex + 1)
+  }
+  editor.errorPopoverTemplate = '  <p>     {{{message}}}   </p>   <p><button type="button" class="btn btn-info btn-sm">Help page for this error</button></p>   '
+  editor.showError = function(editorObject, lineIndex, comment) {
+    // Only show error if it's not already showing
+    if (!(lineIndex in editorObject.comments)) {
+      var preElement = editor.getPreElement(editorObject, lineIndex)
+      editorObject.comments[lineIndex] = preElement
+      var content = Mustache.render(editor.errorPopoverTemplate, {
+          message: comment.message
+        })
+      preElement.popover({
+        placement: "right",
+        container: "body",
+        html: true,
+        title: "<strong>Error</strong>",
+        content: content,
+        template: '<div class="popover panel panel-warning"><div class="arrow"></div><h3 class="popover-title panel-heading"></h3><div class="popover-content panel-body"></div></div>'
+      })
+      preElement.popover('show')
+    }
+  }
+  editor.removeError = function(editorObject, lineIndex) {
+    console.log("removeError: " + lineIndex)
+    PuzzleCode.assert("lineIndex not in editorObject.comments", function(){
+      return lineIndex in editorObject.comments
+    })
+    var preElement = editorObject.comments[lineIndex]
+    delete editorObject.comments[lineIndex]
+    preElement.popover('destroy')
+  }
+  editor.removeObsoleteErrors = function(editorObject, program) {
+    console.log("removeObsoleteErrors begin")
+    _.forOwn(editorObject.comments, function(comment, lineIndex) {
+      console.dir(comment)
+      console.dir(lineIndex)
+      // if the line has a popover, but no corresponding comment in program
+      if (!(lineIndex in program.comments)) {
+        console.log("removing")
+        editor.removeError(editorObject, lineIndex)
+      }
+    })
+    console.log("removeObsoleteErrors end")
   }
   editor.newEditor = function(board, botId, editorId) {
     var settings = {
@@ -824,30 +872,47 @@ PuzzleCode.editor = (function(){
       "</div>")
     var cm = CodeMirror(document.getElementById(PuzzleCode.chomp(editorDomId)),
                         settings)
-    cm.setSize("100%", "170px")
-    //  TODO: put the cursorActivity function in seperate file
-    /*var line = 0
-    cm.on("cursorActivity", function(cm) {
-      var newLine = cm.getCursor().line
-      if (PLAY_STATUS == PlayStatus.INITAL_STATE_PAUSED) {
-        if (line != newLine) {
-          compile()
-        }
-        line = newLine
-      }
-    })
-
-    // You cannot edit the program, unless it is in the reset state
-    cm.on("beforeChange", function(cm, change) {
-      if (PLAY_STATUS != PlayStatus.INITAL_STATE_PAUSED) {
-        change.cancel()
-      }
-    })*/
-    return {
+    var editorObject = {
+      board: board,
       editorId: editorId,
       botId: botId,
-      cm: cm
+      cm: cm,
+      comments: {}
     }
+    cm.setSize("100%", "170px")
+    var bot = PuzzleCode.board.getBot(board, botId)
+    cm.setValue(bot.programText)
+    // Monitor the editor for changes
+    cm.oldLine = 0
+    cm.on("cursorActivity", function(cm) {
+      if (board.state.playState == PuzzleCode.board.PlayState.INITIAL_STATE_PAUSED) {
+        var newLine = cm.getCursor().line
+        // Only __add__ errors if the curser moves onto a new line
+        if (cm.oldLine != newLine) {
+          // TODO: incremental compiler if this is too expensive
+          var program = PuzzleCode.compiler.compile(cm.getValue(), {})
+          cm.oldLine = newLine
+          editor.removeObsoleteErrors(editorObject, program)
+          if (program.error) {
+            _.forOwn(program.comments, function(comment, lineIndex){
+              editor.showError(editorObject, +lineIndex, comment)
+            })
+          }
+        }
+        // but always try to remove errors, if any exist
+        else if (!_.isEmpty(editorObject.comments)) {
+          var program = PuzzleCode.compiler.compile(cm.getValue(), {})
+          editor.removeObsoleteErrors(editorObject, program)
+        }
+      }
+    })
+    // You cannot edit the program, unless it is in the reset state
+    cm.on("beforeChange", function(cm, change) {
+      if (board.state.playState != PuzzleCode.board.PlayState.INITIAL_STATE_PAUSED) {
+        change.cancel()
+      }
+    })
+    return editorObject
   }
   return editor
 })()
@@ -940,7 +1005,7 @@ PuzzleCode.viz = (function(){
           "id='" + PuzzleCode.chomp(board.playbackButtonsId) + "' " +
        "class='btn-group'></div>")
   var buttonTemplate =
-   "<button type='button' class='btn btn-default' " +
+   "<button type='button' class='btn btn-default btn-sm' " +
    "id='{{{buttonId}}}' " +
    "onclick=\"PuzzleCode.click('{{{buttonName}}}', '{{{boardDivId}}}')\" >" +
    "<span class='glyphicon {{{glyph}}}'></span>" +
@@ -1227,7 +1292,8 @@ PuzzleCode.buttons = (function(){
  buttons.playpause = {
   glyph: "glyphicon-play",
   fn: function(board) {
-   if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
+   if (board.state.playState == PuzzleCode.board.PlayState.INITIAL_STATE_PAUSED ||
+     board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
     board.state.playState = PuzzleCode.board.PlayState.PLAYING
     buttons.setGlyph(board, "playpause", "glyphicon-pause")
     var playStep = function() {
@@ -1246,7 +1312,8 @@ PuzzleCode.buttons = (function(){
  buttons.step = {
   glyph: "glyphicon-step-forward",
   fn: function(board) {
-   if (board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
+   if (board.state.playState == PuzzleCode.board.PlayState.INITIAL_STATE_PAUSED ||
+     board.state.playState == PuzzleCode.board.PlayState.PAUSED) {
     board.state.playState = PuzzleCode.board.PlayState.STEPPING
     var animationSpec = PuzzleCode.sim.step(board)
     PuzzleCode.viz.animateStep(animationSpec, board)
@@ -1307,14 +1374,14 @@ PuzzleCode.init = function(boardConfig, divId) {
  ******************************************************************************/
 var config = {
   buttons: ["playpause", "reset", "step", "editor_reset"],
-  editors: [0,1],
+  editors: [0],
  bots: [
     {
       color: PuzzleCode.bot.Color.BLUE,
       x: 2,
       y: 1,
       facing: PuzzleCode.direction.RIGHT,
-      programText: "",
+      programText: "move",
       constraints: {}
     },
     {
@@ -1330,7 +1397,7 @@ var config = {
       x: 0,
       y: 0,
       facing: PuzzleCode.direction.LEFT,
-      programText: "move\nmove\nmove\nmove",
+      programText: "move\nmove\nmove",
       constraints: {}
     },
   ],

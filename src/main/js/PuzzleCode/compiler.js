@@ -178,7 +178,7 @@ PuzzleCode.compiler = (function(){
     },
     invalidOpcode: function(opcode) {
       return {
-        message: "'" + compiler.trim(opcode) + "' is not an instruction",
+        message: "<code>" + compiler.trim(opcode) + "</code> is not an instruction",
         urlKeyword: "invalid_opcode"
       }
     },

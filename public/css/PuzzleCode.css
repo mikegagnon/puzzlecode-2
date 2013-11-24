@@ -10,6 +10,7 @@
   border-radius: 8px;
   float: left;
   margin-right: 8px;
+  width: 100%;
 }
 .pc-svg-board {
   margin-top: 5px;
@@ -69,4 +70,10 @@ body {
 .pc-play-area {
   float: left;
   margin-right: 6px;
+}
+code {
+  font-family: "Courier New", monospace;
+  color: #000;
+  font-size: 16px;
+  background-color: #fff;
 }
