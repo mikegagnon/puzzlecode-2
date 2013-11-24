@@ -133,7 +133,7 @@ PuzzleCode.board = (function(){
     	cellSize: {type: "integer"},
       buttons: {
         type: "array",
-        items: "string"
+        items: {enum: ["playpause", "reset", "step", "editor_reset"] }
       },
       bots: {
         type: "array",

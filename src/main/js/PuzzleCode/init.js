@@ -50,8 +50,8 @@ PuzzleCode.init = function(boardConfig, divId) {
  * Testing
  ******************************************************************************/
 var config = {
-  buttons: ["playpause", "reset", "step"],
-  editors: [0],
+  buttons: ["playpause", "reset", "step", "editor_reset"],
+  editors: [0,1],
 	bots: [
     {
       color: PuzzleCode.bot.Color.BLUE,

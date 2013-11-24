@@ -57,32 +57,50 @@ PuzzleCode.editor = (function(){
     var toolbarId = editor.getToolbarDomId(board, editorId)
     var buttonsId = editor.getToolbarButtonsDomId(board, editorId)
 
+
+
     $(toolbarId).append(
       "<div " +
       "id='" +  PuzzleCode.chomp(buttonsId) + "' " +
-      "class='btn-group'></div>")
+      "class='btn-group'>" +
+      "</div>")
 
     var buttonTemplate =
       "<button type='button' class='btn btn-default' " +
       "id='{{{buttonId}}}' " +
-      "onclick=\"PuzzleCode.editor.click('{{{buttonName}}}', " +
-                                        "'{{{boardDivId}}}', " +
-                                        "{{{editorId}}})\" >" +
+      "onclick=\"PuzzleCode.click('{{{buttonName}}}', " +
+                                 "'{{{boardDivId}}}', " +
+                                 "{{{editorId}}})\" >" +
       "<span class='glyphicon {{{glyph}}}'></span>"  +
       "</button>"
 
-    var buttonName = "reset"
-    var glyph = "glyphicon-refresh"
-    var buttonId = editor.getButtonId(board, editorId, buttonName)
+    var buttonOrder = [
+      "editor_reset",
+    ]
 
-    $(buttonsId).append(
-      Mustache.render(buttonTemplate, {
-        buttonId: PuzzleCode.chomp(buttonId),
-        buttonName: buttonName,
-        glyph: glyph,
-        boardDivId: board.divId,
-        editorId: editorId
-      }))
+    _(buttonOrder).forEach(function(buttonName){
+      if (_.contains(board.config.buttons, buttonName)) {
+        $(buttonsId).append(
+          Mustache.render(buttonTemplate, {
+            buttonId: PuzzleCode.chomp(editor.getButtonId(board, editorId, buttonName)),
+            buttonName: buttonName,
+            glyph: PuzzleCode.buttons[buttonName].glyph,
+            boardDivId: board.divId,
+            editorId: editorId
+          }))
+      }
+    })
+
+    // a hidden button, to ensure that whitespace is always the same, even
+    // if there are no buttons
+    $(toolbarId).append(
+      "<div " +
+      "class='btn-group'>" +
+      "<button type='button' class='btn btn-default' style='visibility: hidden'>" +
+      "<span class='glyphicon glyphicon-refresh'></span>" +
+      "</button>" +
+      "</div>")
+
   }
 
   editor.newEditor = function(board, botId, editorId) {

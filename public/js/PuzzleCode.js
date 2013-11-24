@@ -699,7 +699,7 @@ PuzzleCode.board = (function(){
      cellSize: {type: "integer"},
       buttons: {
         type: "array",
-        items: "string"
+        items: {enum: ["playpause", "reset", "step", "editor_reset"] }
       },
       bots: {
         type: "array",
@@ -759,26 +759,40 @@ PuzzleCode.editor = (function(){
     $(toolbarId).append(
       "<div " +
       "id='" + PuzzleCode.chomp(buttonsId) + "' " +
-      "class='btn-group'></div>")
+      "class='btn-group'>" +
+      "</div>")
     var buttonTemplate =
       "<button type='button' class='btn btn-default' " +
       "id='{{{buttonId}}}' " +
-      "onclick=\"PuzzleCode.editor.click('{{{buttonName}}}', " +
-                                        "'{{{boardDivId}}}', " +
-                                        "{{{editorId}}})\" >" +
+      "onclick=\"PuzzleCode.click('{{{buttonName}}}', " +
+                                 "'{{{boardDivId}}}', " +
+                                 "{{{editorId}}})\" >" +
       "<span class='glyphicon {{{glyph}}}'></span>" +
       "</button>"
-    var buttonName = "reset"
-    var glyph = "glyphicon-refresh"
-    var buttonId = editor.getButtonId(board, editorId, buttonName)
-    $(buttonsId).append(
-      Mustache.render(buttonTemplate, {
-        buttonId: PuzzleCode.chomp(buttonId),
-        buttonName: buttonName,
-        glyph: glyph,
-        boardDivId: board.divId,
-        editorId: editorId
-      }))
+    var buttonOrder = [
+      "editor_reset",
+    ]
+    _(buttonOrder).forEach(function(buttonName){
+      if (_.contains(board.config.buttons, buttonName)) {
+        $(buttonsId).append(
+          Mustache.render(buttonTemplate, {
+            buttonId: PuzzleCode.chomp(editor.getButtonId(board, editorId, buttonName)),
+            buttonName: buttonName,
+            glyph: PuzzleCode.buttons[buttonName].glyph,
+            boardDivId: board.divId,
+            editorId: editorId
+          }))
+      }
+    })
+    // a hidden button, to ensure that whitespace is always the same, even
+    // if there are no buttons
+    $(toolbarId).append(
+      "<div " +
+      "class='btn-group'>" +
+      "<button type='button' class='btn btn-default' style='visibility: hidden'>" +
+      "<span class='glyphicon glyphicon-refresh'></span>" +
+      "</button>" +
+      "</div>")
   }
   editor.newEditor = function(board, botId, editorId) {
     var settings = {
@@ -1251,6 +1265,13 @@ PuzzleCode.buttons = (function(){
    PuzzleCode.viz.initItems(board)
   }
  }
+ buttons.editor_reset = {
+  glyph: "glyphicon-refresh",
+  fn: function(board, editorId) {
+   console.dir(board)
+   console.dir(editorId)
+  }
+ }
  return buttons
 })()
 // divMap[divId] == the board object for that div
@@ -1285,8 +1306,8 @@ PuzzleCode.init = function(boardConfig, divId) {
  * Testing
  ******************************************************************************/
 var config = {
-  buttons: ["playpause", "reset", "step"],
-  editors: [0],
+  buttons: ["playpause", "reset", "step", "editor_reset"],
+  editors: [0,1],
  bots: [
     {
       color: PuzzleCode.bot.Color.BLUE,
@@ -1348,11 +1369,11 @@ var config = {
   ],
 }
 var board2 = PuzzleCode.init(config, "#board2")
-PuzzleCode.click = function(buttonName, divId) {
+PuzzleCode.click = function(buttonName, divId, extraArgs) {
   "use strict"
   var board = PuzzleCode.divMap[divId]
   var fn = PuzzleCode.buttons[buttonName].fn
-  fn(board);
+  fn(board, extraArgs);
 }
 PuzzleCode.sim = (function(){
   "use strict"

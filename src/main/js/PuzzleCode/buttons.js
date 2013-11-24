@@ -79,6 +79,14 @@ PuzzleCode.buttons = (function(){
 		}
 	}
 
+	buttons.editor_reset = {
+		glyph: "glyphicon-refresh",
+		fn: function(board, editorId) {
+			console.dir(board)
+			console.dir(editorId)
+		}
+	}
+
 	return buttons
 })()
 

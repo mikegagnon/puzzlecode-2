@@ -4,11 +4,11 @@
 #include "main/js/PuzzleCode/header.js"
 #include "main/js/PuzzleCode/board.js"
 
-PuzzleCode.click = function(buttonName, divId) {
+PuzzleCode.click = function(buttonName, divId, extraArgs) {
   "use strict"
   var board = PuzzleCode.divMap[divId]
   var fn = PuzzleCode.buttons[buttonName].fn
-  fn(board);
+  fn(board, extraArgs);
 }
 
 #endif
