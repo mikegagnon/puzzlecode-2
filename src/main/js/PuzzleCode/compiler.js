@@ -133,15 +133,15 @@ PuzzleCode.compiler = (function(){
    ****************************************************************************/
   compiler.Error = {
     MALFORMED_MOVE: {
-      message: "Malformed 'move' instruction",
+      message: "Malformed <code>move</code> instruction",
       urlKeyword: "malformed_move"
     },
     TURN_WITHOUT_DIRECTION: {
-      message: "The 'turn' instruction is missing a direction",
+      message: "The <code>turn</code> instruction is missing a direction",
       urlKeyword: "turn_without_direction"
     },
     MALFORMED_TURN: {
-      message: "Malformed 'turn' instruction",
+      message: "Malformed <code>turn</code> instruction",
       urlKeyword: "malformed_turn"
     },
     turnWithBadDirection: function(direction) {
@@ -151,28 +151,28 @@ PuzzleCode.compiler = (function(){
       }
     },
     GOTO_WITHOUT_LABEL: {
-      message: "The 'goto' instruction is missing a label",
+      message: "The <code>goto</code> instruction is missing a label",
       urlKeyword: "goto_without_label"
     },
     MALFORMED_GOTO: {
-      message: "Malformed 'goto' instruction",
+      message: "Malformed <codoe>goto</code> instruction",
       urlKeyword: "malformed_goto"
     },
     gotoWithInvalidLabel: function(label) {
       return {
-        message: "'" + compiler.trim(label) + "' is not a valid label",
+        message: "<code>" + compiler.trim(label) + "</code> is not a valid label",
         urlKeyword: "goto_with_invalid_label"
       }
     },
     instructionWithInvalidLabel: function(label) {
       return {
-        message: "'" + compiler.trim(label) + "' is not a valid label",
+        message: "<code>" + compiler.trim(label) + "</code> is not a valid label",
         urlKeyword: "instruction_with_invalid_label"
       }
     },
     duplicateLabel: function(label) {
       return {
-        message: "The label '" + compiler.trim(label) + "' is already defined",
+        message: "The label <code>" + compiler.trim(label) + "</code> is already defined",
         urlKeyword: "duplicate_label"
       }
     },
@@ -188,7 +188,7 @@ PuzzleCode.compiler = (function(){
     },
     labelDoesNotExist: function(label) {
       return {
-        message: "The label '" + compiler.trim(label) + "' does not exist",
+        message: "The label <code>" + compiler.trim(label) + "</code> does not exist",
         urlKeyword: "label_does_not_exist"
       }
     },

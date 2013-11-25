@@ -3,7 +3,7 @@
 
 #include "main/js/PuzzleCode/header.js"
 
-PuzzleCode.HELP_URL = "http://puzzlecode.org/help/"
+PuzzleCode.HELP_URL_TEMPLATE = "http://puzzlecode.org?keyword={{{urlKeyword}}}"
 PuzzleCode.JSON_SCHEMA = "http://json-schema.org/draft-04/schema#"
 
 #endif

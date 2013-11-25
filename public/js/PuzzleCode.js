@@ -32,7 +32,7 @@ PuzzleCode.newMatrix = function(width, height, defaultValue) {
 PuzzleCode.chomp = function(id) {
   return id.replace(/^#/, '')
 }
-PuzzleCode.HELP_URL = "http://puzzlecode.org/help/"
+PuzzleCode.HELP_URL_TEMPLATE = "http://puzzlecode.org?keyword={{{urlKeyword}}}"
 PuzzleCode.JSON_SCHEMA = "http://json-schema.org/draft-04/schema#"
 PuzzleCode.assert = function(message, func) {
   "use strict"
@@ -220,15 +220,15 @@ PuzzleCode.compiler = (function(){
    ****************************************************************************/
   compiler.Error = {
     MALFORMED_MOVE: {
-      message: "Malformed 'move' instruction",
+      message: "Malformed <code>move</code> instruction",
       urlKeyword: "malformed_move"
     },
     TURN_WITHOUT_DIRECTION: {
-      message: "The 'turn' instruction is missing a direction",
+      message: "The <code>turn</code> instruction is missing a direction",
       urlKeyword: "turn_without_direction"
     },
     MALFORMED_TURN: {
-      message: "Malformed 'turn' instruction",
+      message: "Malformed <code>turn</code> instruction",
       urlKeyword: "malformed_turn"
     },
     turnWithBadDirection: function(direction) {
@@ -238,28 +238,28 @@ PuzzleCode.compiler = (function(){
       }
     },
     GOTO_WITHOUT_LABEL: {
-      message: "The 'goto' instruction is missing a label",
+      message: "The <code>goto</code> instruction is missing a label",
       urlKeyword: "goto_without_label"
     },
     MALFORMED_GOTO: {
-      message: "Malformed 'goto' instruction",
+      message: "Malformed <codoe>goto</code> instruction",
       urlKeyword: "malformed_goto"
     },
     gotoWithInvalidLabel: function(label) {
       return {
-        message: "'" + compiler.trim(label) + "' is not a valid label",
+        message: "<code>" + compiler.trim(label) + "</code> is not a valid label",
         urlKeyword: "goto_with_invalid_label"
       }
     },
     instructionWithInvalidLabel: function(label) {
       return {
-        message: "'" + compiler.trim(label) + "' is not a valid label",
+        message: "<code>" + compiler.trim(label) + "</code> is not a valid label",
         urlKeyword: "instruction_with_invalid_label"
       }
     },
     duplicateLabel: function(label) {
       return {
-        message: "The label '" + compiler.trim(label) + "' is already defined",
+        message: "The label <code>" + compiler.trim(label) + "</code> is already defined",
         urlKeyword: "duplicate_label"
       }
     },
@@ -275,7 +275,7 @@ PuzzleCode.compiler = (function(){
     },
     labelDoesNotExist: function(label) {
       return {
-        message: "The label '" + compiler.trim(label) + "' does not exist",
+        message: "The label <code>" + compiler.trim(label) + "</code> does not exist",
         urlKeyword: "label_does_not_exist"
       }
     },
@@ -800,14 +800,19 @@ PuzzleCode.editor = (function(){
     var editorDomId = editor.getDomId(editorObject.board, editorObject.editorId)
     return $(editorDomId + " pre").eq(+lineIndex + 1)
   }
-  editor.errorPopoverTemplate = '  <p>     {{{message}}}   </p>   <p><button type="button" class="btn btn-info btn-sm">Help page for this error</button></p>   '
+  editor.errorPopoverTemplate = '    <p>       {{{message}}}     </p>     <a href="{{{url}}}" class="btn btn-info btn-sm">    Help page for this error</button>     '
+  editor.errorBootstrapTemplate = '<div class="popover panel panel-warning">      <div class="arrow"></div>      <h3 class="popover-title panel-heading"></h3>      <div class="popover-content panel-body"></div>    </div>'
   editor.showError = function(editorObject, lineIndex, comment) {
     // Only show error if it's not already showing
     if (!(lineIndex in editorObject.comments)) {
       var preElement = editor.getPreElement(editorObject, lineIndex)
       editorObject.comments[lineIndex] = preElement
+      var url = Mustache.render(PuzzleCode.HELP_URL_TEMPLATE, {
+          urlKeyword: comment.urlKeyword
+        })
       var content = Mustache.render(editor.errorPopoverTemplate, {
-          message: comment.message
+          message: comment.message,
+          url: url
         })
       preElement.popover({
         placement: "right",
@@ -815,7 +820,7 @@ PuzzleCode.editor = (function(){
         html: true,
         title: "<strong>Error</strong>",
         content: content,
-        template: '<div class="popover panel panel-warning"><div class="arrow"></div><h3 class="popover-title panel-heading"></h3><div class="popover-content panel-body"></div></div>'
+        template: editor.errorBootstrapTemplate
       })
       preElement.popover('show')
     }

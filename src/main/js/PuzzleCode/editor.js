@@ -107,19 +107,32 @@ PuzzleCode.editor = (function(){
   }
 
   editor.errorPopoverTemplate = '\
-  <p> \
-    {{{message}}} \
-  </p> \
-  <p><button type="button" class="btn btn-info btn-sm">Help page for this error</button></p> \
-  '
+    <p> \
+      {{{message}}} \
+    </p> \
+    <a href="{{{url}}}" class="btn btn-info btn-sm">\
+    Help page for this error</button> \
+    '
+
+  editor.errorBootstrapTemplate = '<div class="popover panel panel-warning">\
+      <div class="arrow"></div>\
+      <h3 class="popover-title panel-heading"></h3>\
+      <div class="popover-content panel-body"></div>\
+    </div>'
 
   editor.showError = function(editorObject, lineIndex, comment) {
     // Only show error if it's not already showing
     if (!(lineIndex in editorObject.comments)) {
       var preElement = editor.getPreElement(editorObject, lineIndex)
       editorObject.comments[lineIndex] = preElement
+      
+      var url = Mustache.render(PuzzleCode.HELP_URL_TEMPLATE, {
+          urlKeyword: comment.urlKeyword
+        })
+
       var content = Mustache.render(editor.errorPopoverTemplate, {
-          message: comment.message
+          message: comment.message,
+          url: url
         })
 
       preElement.popover({
@@ -128,7 +141,7 @@ PuzzleCode.editor = (function(){
         html: true,
         title: "<strong>Error</strong>",
         content: content,
-        template: '<div class="popover panel panel-warning"><div class="arrow"></div><h3 class="popover-title panel-heading"></h3><div class="popover-content panel-body"></div></div>'
+        template: editor.errorBootstrapTemplate
       })
       preElement.popover('show')
     }
