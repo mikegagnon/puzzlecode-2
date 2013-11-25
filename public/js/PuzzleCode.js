@@ -796,6 +796,14 @@ PuzzleCode.editor = (function(){
       "</button>" +
       "</div>")
   }
+  editor.undoHighlightLine = function(editorObject, lineIndex, css) {
+    var lineHandle = editorObject.cm.getLineHandle(lineIndex)
+    editorObject.cm.removeLineClass(lineHandle, "background", css);
+  }
+  editor.highlightLine = function(editorObject, lineIndex, css) {
+    var lineHandle = editorObject.cm.getLineHandle(lineIndex)
+    editorObject.cm.addLineClass(lineHandle, "background", css)
+  }
   editor.getPreElement = function(editorObject, lineIndex) {
     var editorDomId = editor.getDomId(editorObject.board, editorObject.editorId)
     return $(editorDomId + " pre").eq(+lineIndex + 1)
@@ -823,29 +831,25 @@ PuzzleCode.editor = (function(){
         template: editor.errorBootstrapTemplate
       })
       preElement.popover('show')
+      editor.highlightLine(editorObject, lineIndex, "error-line")
     }
   }
   editor.removeError = function(editorObject, lineIndex) {
-    console.log("removeError: " + lineIndex)
     PuzzleCode.assert("lineIndex not in editorObject.comments", function(){
       return lineIndex in editorObject.comments
     })
     var preElement = editorObject.comments[lineIndex]
     delete editorObject.comments[lineIndex]
     preElement.popover('destroy')
+    editor.undoHighlightLine(editorObject, lineIndex, "error-line")
   }
   editor.removeObsoleteErrors = function(editorObject, program) {
-    console.log("removeObsoleteErrors begin")
     _.forOwn(editorObject.comments, function(comment, lineIndex) {
-      console.dir(comment)
-      console.dir(lineIndex)
       // if the line has a popover, but no corresponding comment in program
       if (!(lineIndex in program.comments)) {
-        console.log("removing")
         editor.removeError(editorObject, lineIndex)
       }
     })
-    console.log("removeObsoleteErrors end")
   }
   editor.newEditor = function(board, botId, editorId) {
     var settings = {
@@ -888,15 +892,15 @@ PuzzleCode.editor = (function(){
     var bot = PuzzleCode.board.getBot(board, botId)
     cm.setValue(bot.programText)
     // Monitor the editor for changes
-    cm.oldLine = 0
+    cm._oldLine = 0
     cm.on("cursorActivity", function(cm) {
       if (board.state.playState == PuzzleCode.board.PlayState.INITIAL_STATE_PAUSED) {
         var newLine = cm.getCursor().line
         // Only __add__ errors if the curser moves onto a new line
-        if (cm.oldLine != newLine) {
+        if (cm._oldLine != newLine) {
           // TODO: incremental compiler if this is too expensive
           var program = PuzzleCode.compiler.compile(cm.getValue(), {})
-          cm.oldLine = newLine
+          cm._oldLine = newLine
           editor.removeObsoleteErrors(editorObject, program)
           if (program.error) {
             _.forOwn(program.comments, function(comment, lineIndex){
